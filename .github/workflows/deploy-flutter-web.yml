@@ -31,7 +31,7 @@ jobs:
     # 4. Build the web app
     - name: Build Flutter Web
       # run: flutter build web --base-href="/AlsouqAllWeb/" --dart-define SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-      run: flutter build web --base-href="/Planning/" --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+      run: flutter build web --base-href="/Farm_Plan/" --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
       # run: flutter build web --dart-define SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
 
     # 5. Deploy to GitHub Pages

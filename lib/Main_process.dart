@@ -159,17 +159,49 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                   )
                 ],
               ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+              // SingleChildScrollView(
+              //   scrollDirection: Axis.horizontal,
+              //   child: Row(
+              //     children: areas.map((area) {
+              //       return GestureDetector(
+              //         onTap: () {
+              //           selectArea(area);
+              //         },
+              //         child: Container(
+              //           margin: const EdgeInsets.symmetric(horizontal: 8),
+              //           padding: const EdgeInsets.all(8),
+              //           decoration: BoxDecoration(
+              //             color: Colors.blueAccent,
+              //             borderRadius: BorderRadius.circular(8),
+              //           ),
+              //           child: Text(
+              //             area[check_farm].toString(),
+              //             style: const TextStyle(
+              //                 color: Colors.white, fontSize: 12),
+              //           ),
+              //         ),
+              //       );
+              //     }).toList(),
+              //   ),
+              // ),
+            ],
+          ),
+        ),
+        body: Row(
+          children: [
+               SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+mainAxisAlignment: MainAxisAlignment.start,
                   children: areas.map((area) {
                     return GestureDetector(
                       onTap: () {
                         selectArea(area);
                       },
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.blueAccent,
                           borderRadius: BorderRadius.circular(8),
@@ -184,40 +216,41 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                   }).toList(),
                 ),
               ),
-            ],
-          ),
-        ),
-        body: FutureBuilder(
-          future: fetchGroupedProcesses(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final processes = snapshot.data as List<Map<String, dynamic>>;
-
-            return ListView.builder(
-              itemCount: processes.length,
-              itemBuilder: (context, index) {
-                final process = processes[index];
-
-                return ListTile(
-                  title: Text(process['process_name']),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SubProcessScreen(
-                          selectedDate: selectedDate,
-                          processName: process['process_name'],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          },
+            Expanded(
+              child: FutureBuilder(
+                future: fetchGroupedProcesses(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+              
+                  final processes = snapshot.data as List<Map<String, dynamic>>;
+              
+                  return ListView.builder(
+                    itemCount: processes.length,
+                    itemBuilder: (context, index) {
+                      final process = processes[index];
+              
+                      return ListTile(
+                        title: Text(process['process_name']),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SubProcessScreen(
+                                selectedDate: selectedDate,
+                                processName: process['process_name'],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
