@@ -65,17 +65,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('تسجيل الدخول')),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(controller: _userController, decoration: InputDecoration(labelText: 'اسم المستخدم')),
-            TextField(controller: _passController, decoration: InputDecoration(labelText: 'كلمة السر'), obscureText: true),
-            SizedBox(height: 20),
-            ElevatedButton(onPressed: _login, child: Text('دخول')),
-          ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: Text('تسجيل الدخول')),
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(controller: _userController, decoration: InputDecoration(labelText: 'اسم المستخدم')),
+              TextField(controller: _passController, decoration: InputDecoration(labelText: 'كلمة السر'), obscureText: true),
+              SizedBox(height: 20),
+              ElevatedButton(onPressed: _login, child: Text('دخول')),
+            ],
+          ),
         ),
       ),
     );

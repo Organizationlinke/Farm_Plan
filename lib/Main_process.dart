@@ -62,6 +62,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   }
 
   Future<void> fetchAreas() async {
+    areas.clear();
     final result = await supabase
         .from('farm')
         .select()
@@ -158,39 +159,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                   ),
                   Row(
                     children: [
-                      // SingleChildScrollView(
-                      //   scrollDirection: Axis.horizontal,
-                      //   child: Row(
-                      //     children: selectedAreas.map((area) {
-                      //       return Container(
-                      //         // margin: const EdgeInsets.symmetric(horizontal: 8),
-                      //         padding: const EdgeInsets.all(8),
-                      //         decoration: BoxDecoration(
-                      //           color: const Color.fromARGB(255, 228, 230, 228),
-                      //           borderRadius: BorderRadius.circular(8),
-                      //         ),
-                      //         child: Row(
-                      //           children: [
-                      //             Text(
-                      //               area[old_check_farm].toString(),
-                      //               style: const TextStyle(
-                      //                    fontSize: 12),
-                      //             ),
-                      //             const SizedBox(width: 4),
-                      //             GestureDetector(
-                      //               onTap: () => removeArea(area),
-                      //               child: const Icon(
-                      //                 Icons.close_rounded,
-                      //                 color: Colors.red,
-                      //                 size: 12,
-                      //               ),
-                      //             ),
-                      //           ],
-                      //         ),
-                      //       );
-                      //     }).toList(),
-                      //   ),
-                      // ),
+                    
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -274,19 +243,29 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                     itemBuilder: (context, index) {
                       final process = processes[index];
 
-                      return ListTile(
-                        title: Text(process['process_name']),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SubProcessScreen(
-                                selectedDate: selectedDate,
-                                processName: process['process_name'],
+                      return Card(
+                        child: ListTile(
+                          title: Text(process['process_name'],style: TextStyle(fontSize: 20,color: Colors.blue),),
+                          subtitle: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                            Text('انتظار: '),
+                            Text('تحت التشغيل: '),
+                            Text('منتهي: '),
+                            Text('ملغي: ')
+                          ],),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SubProcessScreen(
+                                  selectedDate: selectedDate,
+                                  processName: process['process_name'],
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       );
                     },
                   );
