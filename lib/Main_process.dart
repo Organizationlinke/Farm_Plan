@@ -93,16 +93,18 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   // }
   void selectArea(Map<String, dynamic> area) async {
     String areaCode = area['farm_code']; // استخراج النص من الخريطة
-
+    print('areaCode:$areaCode');
     if (!selectedAreas.contains(areaCode)) {
-      Old_user_area = New_user_area;
+      // Old_user_area = New_user_area;
+      // Old_user_area_IN();
       New_user_area = areaCode;
-      String areaCode2= area[check_farm];
-      print(areaCode2);
+      print('New_user_area:$New_user_area');
+      String areaCode2 = area[check_farm];
+
       new_level++;
-      
+
       checked();
-      
+
       await fetchAreas();
 
       setState(() {
@@ -122,14 +124,16 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   //   });
   // }
   void removeArea(String areaCode) async {
-    New_user_area = Old_user_area;
+    //
+    // Old_user_area_OUT();
+    New_user_area = New_user_area.replaceAll('-$areaCode',"");
     new_level--;
+    print(New_user_area);
     checked();
     await fetchAreas();
     setState(() {
       selectedAreas.remove(areaCode); // حذف العنصر النصي
     });
-    print(New_user_area);
   }
 
   @override
@@ -229,7 +233,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
         body: Row(
           children: [
             Container(
-              color:  const Color.fromARGB(255, 204, 203, 203),
+              color: const Color.fromARGB(255, 204, 203, 203),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
