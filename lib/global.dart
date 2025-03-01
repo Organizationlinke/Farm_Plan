@@ -1,3 +1,7 @@
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+
 int user_level=0;
 var user_area;
 int new_level=0;
@@ -7,6 +11,12 @@ var check_farm;
 var farm_title;
 var old_check_farm;
 int user_type=1;
+
+const Colorapp =Color.fromARGB(255, 120, 60, 255);
+
+const colorbar=  Color.fromARGB(255, 206, 201, 219);
+
+
 void checked(){
  new_level==2?check_farm='area':
 new_level==3?check_farm='sector':

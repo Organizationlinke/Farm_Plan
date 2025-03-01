@@ -123,7 +123,8 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color.fromARGB(255, 204, 203, 203),
+          backgroundColor: colorbar,
+          foregroundColor: Colorapp,
           // leading: Text(farm_title),
           // toolbarHeight: 1,
           title: Column(
@@ -187,7 +188,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
         body: Row(
           children: [
             Container(
-              color: const Color.fromARGB(255, 204, 203, 203),
+              color: const Color.fromARGB(255, 235, 235, 235),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -200,7 +201,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 116, 0, 248),
+                        color:Colorapp,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -232,15 +233,15 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                         child: ListTile(
                           title: Text(
                             '${process['group_process_name']} : ${process['allprocess']} عملية ',
-                            style: TextStyle(fontSize: 20, color: Colors.blue),
+                            style: TextStyle(fontSize: 20, color:Colorapp),
                           ),
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('انتظار: ${process['waited']}'),
-                              Text('تحت التشغيل: ${process['under_progress']}'),
-                              Text('منتهي:${process['finished']} '),
-                              Text('ملغي: ${process['cancel']}')
+                              Text('تحت التشغيل: ${process['under_progress']}',style: TextStyle( color:const Color.fromARGB(255, 192, 144, 0))),
+                              Text('منتهي:${process['finished']} ',style: TextStyle( color:Colors.green)),
+                              Text('ملغي: ${process['cancel']}',style: TextStyle( color:Colors.red))
                             ],
                           ),
                           onTap: () {
