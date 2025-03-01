@@ -1,6 +1,7 @@
 
 import 'package:farmplanning/Main_process.dart';
 import 'package:farmplanning/global.dart';
+import 'package:farmplanning/home.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
       user_area=response["farm_code"];
       farm_title=response["shoet_farm_code"];
       New_user_area=user_area;
+      user_type=response["user_type"];
+      print('user_type:$user_type');
     new_level=user_level+1;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_enter', userEnter);
@@ -50,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
    
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>MainProcessScreen()),
+        MaterialPageRoute(builder: (context) =>MainScreen()),
       // Navigator.push(
       //   context,
       //   MaterialPageRoute(builder: (context) => UserProfileScreen(userData: response)),

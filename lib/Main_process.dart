@@ -26,25 +26,29 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
     super.initState();
     fetchAreas();
     checked();
+    // fetchGroupedProcesses();
   }
 
   Future<List<Map<String, dynamic>>> fetchGroupedProcesses() async {
-    final response = await supabase
-        .from('data_table_full_view2')
-        .select()
-        .like('farm_code', '$New_user_area%')
-        .gte('date_to', selectedDate.toIso8601String())
-        .lte('date_from', selectedDate.toIso8601String());
+    final response = await supabase.rpc('fetch_process_data', params: {
+      'farm_code_param': '$New_user_area%',
+      'date_from_param': selectedDate.toIso8601String(),
+      'date_to_param': selectedDate.toIso8601String(),
+    });
 
-    final data = response as List;
-    final grouped = <String, Map<String, dynamic>>{};
-
-    for (var item in data) {
-      grouped[item['process_name']] = item;
+    // التحقق مما إذا كان `response` يحتوي على خطأ
+    if (response is Map<String, dynamic> && response.containsKey('error')) {
+      throw Exception('خطأ في جلب البيانات: ${response['error']}');
     }
 
-    return grouped.values.toList();
+    if (response is List) {
+      return List<Map<String, dynamic>>.from(response);
+    }
+
+    throw Exception('تنسيق غير متوقع للبيانات: $response');
   }
+
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -77,21 +81,6 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
     }
   }
 
-  // void selectArea(Map<String, dynamic> area) async {
-  //   if (!selectedAreas.contains(area)) {
-  //     Old_user_area = New_user_area;
-  //     New_user_area = area['farm_code'];
-  //     new_level++;
-  //     print(New_user_area);
-  //     checked();
-  //     await fetchAreas();
-
-  //     setState(() {
-  //       selectedAreas.add(area);
-
-  //     });
-  //   }
-  // }
   void selectArea(Map<String, dynamic> area) async {
     String areaCode = area['farm_code']; // استخراج النص من الخريطة
     print('areaCode:$areaCode');
@@ -114,20 +103,11 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
     }
   }
 
-  // void removeArea(Map<String, dynamic> area) async {
-  //   New_user_area = Old_user_area;
-  //   new_level--;
-  //   checked();
-  //   await fetchAreas();
-  //   setState(() {
-  //     selectedAreas.remove(area);
 
-  //   });
-  // }
   void removeArea(String areaCode) async {
     //
     // Old_user_area_OUT();
-    New_user_area = New_user_area.replaceAll('-$areaCode',"");
+    New_user_area = New_user_area.replaceAll('-$areaCode', "");
     new_level--;
     print(New_user_area);
     checked();
@@ -159,11 +139,14 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                   ),
                   Row(
                     children: [
-                    
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                   
+                      Directionality(
+                        textDirection: TextDirection.ltr,
                         child: Row(
                           children: selectedAreas.map((areaCode) {
+                            bool isLast = selectedAreas.last ==
+                                areaCode; // التحقق من آخر عنصر
+                        
                             return Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -173,24 +156,26 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                               child: Row(
                                 children: [
                                   Text(
-                                    areaCode, // الآن يتم طباعة النص مباشرة
+                                    areaCode,
                                     style: const TextStyle(fontSize: 12),
                                   ),
                                   const SizedBox(width: 4),
-                                  GestureDetector(
-                                    onTap: () => removeArea(areaCode),
-                                    child: const Icon(
-                                      Icons.close_rounded,
-                                      color: Colors.red,
-                                      size: 12,
+                                  if (isLast) // إظهار أيقونة الإغلاق فقط للعنصر الأخير
+                                    GestureDetector(
+                                      onTap: () => removeArea(areaCode),
+                                      child: const Icon(
+                                        Icons.close_rounded,
+                                        color: Colors.red,
+                                        size: 12,
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
                             );
                           }).toList(),
                         ),
                       ),
+
                       Text(user_area),
                     ],
                   )
@@ -215,7 +200,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blueAccent,
+                        color: const Color.fromARGB(255, 116, 0, 248),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -245,22 +230,26 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
 
                       return Card(
                         child: ListTile(
-                          title: Text(process['process_name'],style: TextStyle(fontSize: 20,color: Colors.blue),),
+                          title: Text(
+                            '${process['group_process_name']} : ${process['allprocess']} عملية ',
+                            style: TextStyle(fontSize: 20, color: Colors.blue),
+                          ),
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                            Text('انتظار: '),
-                            Text('تحت التشغيل: '),
-                            Text('منتهي: '),
-                            Text('ملغي: ')
-                          ],),
+                              Text('انتظار: ${process['waited']}'),
+                              Text('تحت التشغيل: ${process['under_progress']}'),
+                              Text('منتهي:${process['finished']} '),
+                              Text('ملغي: ${process['cancel']}')
+                            ],
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SubProcessScreen(
+                                builder: (context) => DataTableScreen(
                                   selectedDate: selectedDate,
-                                  processName: process['process_name'],
+                                  processName: process['group_process_name'],
                                 ),
                               ),
                             );
