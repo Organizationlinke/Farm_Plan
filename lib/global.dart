@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,10 @@ int user_type=1;
 const Colorapp =Color.fromARGB(255, 120, 60, 255);
 
 const colorbar=  Color.fromARGB(255, 206, 201, 219);
+const color_under= Color.fromARGB(255, 192, 144, 0);
+const color_finish=Colors.green;
+const color_cancel=Colors.red;
+
 
 
 void checked(){

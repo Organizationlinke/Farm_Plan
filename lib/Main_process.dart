@@ -239,9 +239,9 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('انتظار: ${process['waited']}'),
-                              Text('تحت التشغيل: ${process['under_progress']}',style: TextStyle( color:const Color.fromARGB(255, 192, 144, 0))),
-                              Text('منتهي:${process['finished']} ',style: TextStyle( color:Colors.green)),
-                              Text('ملغي: ${process['cancel']}',style: TextStyle( color:Colors.red))
+                              Text('تحت التشغيل: ${process['under_progress']}',style: TextStyle( color:color_under)),
+                              Text('منتهي:${process['finished']} ',style: TextStyle( color:color_finish)),
+                              Text('ملغي: ${process['cancel']}',style: TextStyle( color:color_cancel))
                             ],
                           ),
                           onTap: () {

@@ -198,6 +198,8 @@ Future<void> _saveData() async {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
+           backgroundColor: colorbar,
+          foregroundColor: Colorapp,
             title:
                 Text('${widget.processName} - ${widget.selectedDate.toLocal().toString().split(' ')[0]}'),
                     actions: [
@@ -231,16 +233,18 @@ Future<void> _saveData() async {
                     margin: EdgeInsets.all(10),
                     child: ListTile(
                       title: Text(
-                          '${item['items']} : ${item['qty']} ${item['unit']}'),
+                          '${item['items']} : ${item['qty']} ${item['unit']}',style: TextStyle(color: Colorapp)),
                       subtitle: Column(
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
                                 children: [
-                                  Text('قيد التنفيذ'),
+                                  Text('قيد التنفيذ',style: TextStyle(color: color_under),),
                                   Radio<String>(
                                     value: 'under_progress',
+                                     activeColor: color_under,
                                     groupValue: _itemStatuses[item['id']],
                                     onChanged:user_type!=2?null: underProgressNotNull
                                         ? null
@@ -254,9 +258,11 @@ Future<void> _saveData() async {
                               ),
                               Row(
                                 children: [
-                                  Text('منتهي'),
+                                  Text('منتهي',style: TextStyle(color: color_finish)),
                                   Radio<String>(
                                     value: 'finished',
+                                  
+                                     activeColor: color_finish,
                                     groupValue: _itemStatuses[item['id']],
                                     onChanged:user_type!=2?null: cancel_notnull
                                         ? null
@@ -269,9 +275,10 @@ Future<void> _saveData() async {
                               ),
                               Row(
                                 children: [
-                                  Text('ملغي'),
+                                  Text('ملغي',style: TextStyle(color: color_cancel)),
                                   Radio<String>(
                                     value: 'cancel',
+                                    activeColor: color_cancel,
                                     groupValue: _itemStatuses[item['id']],
                                     onChanged:user_type!=2?null: underProgressNotNull
                                         ? null
