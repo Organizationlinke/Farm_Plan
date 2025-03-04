@@ -33,28 +33,63 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       });
     }
   }
-
-  Future<void> _updateProfile() async {
-    String? imageUrl;
-    if (_image != null) {
-      final imageBytes = await _image!.readAsBytes();
-      final response = await Supabase.instance.client.storage
-          .from('avatars')
-          .uploadBinary('${widget.userData['user_enter']}.png', imageBytes);
-      imageUrl = response;
+Future<void> _updateProfile() async {
+  String? imageUrl;
+  
+  if (_image != null) {
+    try {
+      final filePath = 'user_photo/${widget.userData['user_enter']}.png';
+      
+      // رفع الصورة إلى Supabase
+      await Supabase.instance.client.storage
+          .from('user_photo')
+          .upload(filePath, _image!, fileOptions: const FileOptions(upsert: true));
+      
+      // الحصول على الرابط العام
+      imageUrl = Supabase.instance.client.storage.from('user_photo').getPublicUrl(filePath);
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء رفع الصورة: $e')),
+      );
+      return;
     }
-
-    await Supabase.instance.client.from('users').update({
-      'user_name': _nameController.text,
-      'pass': _passController.text,
-      'farm_id': int.parse(_selectedFarm!),
-      if (imageUrl != null) 'photo_url': imageUrl,
-    }).eq('user_enter', widget.userData['user_enter']);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('تم تحديث البيانات بنجاح')),
-    );
   }
+
+  // تحديث بيانات المستخدم في الجدول
+  await Supabase.instance.client.from('users').update({
+    'user_name': _nameController.text,
+    'pass': _passController.text,
+    'farm_id': int.parse(_selectedFarm!),
+    if (imageUrl != null) 'photo_url': imageUrl,
+  }).eq('user_enter', widget.userData['user_enter']);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('تم تحديث البيانات بنجاح')),
+  );
+}
+
+  // Future<void> _updateProfile() async {
+  //   String? imageUrl;
+  //   if (_image != null) {
+  //     final imageBytes = await _image!.readAsBytes();
+  //     final response = await Supabase.instance.client.storage
+  //         .from('avatars')
+  //         .uploadBinary('${widget.userData['user_enter']}.png', imageBytes);
+  //     imageUrl = response;
+  //   }
+
+  //   await Supabase.instance.client.from('users').update({
+  //     'user_name': _nameController.text,
+  //     'pass': _passController.text,
+  //     'farm_id': int.parse(_selectedFarm!),
+  //     if (imageUrl != null) 'photo_url': imageUrl,
+  //   }).eq('user_enter', widget.userData['user_enter']);
+
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text('تم تحديث البيانات بنجاح')),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +107,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ? FileImage(_image!)
                     : widget.userData['photo_url'] != null
                         ? NetworkImage(widget.userData['photo_url']) as ImageProvider
-                        : AssetImage('assets/default_avatar.png'),
+                        : NetworkImage('https://rfnklwurcdgbfjsatato.supabase.co/storage/v1/object/public/user_photo//default_avatar.png'),
               ),
             ),
             TextField(controller: _nameController, decoration: InputDecoration(labelText: 'الاسم كامل')),

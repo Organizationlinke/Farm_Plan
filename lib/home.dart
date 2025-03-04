@@ -1,5 +1,6 @@
 import 'package:farmplanning/Main_process.dart';
 import 'package:farmplanning/global.dart';
+import 'package:farmplanning/users.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -28,6 +29,7 @@ class _MainScreenState extends State<MainScreen> {
     MainProcessScreen(),
     OrdersScreen(),
     ChatScreen(),
+    UserProfileScreen(userData: user_respose,),
     MoreScreen(),
   ];
 
@@ -52,6 +54,7 @@ class _MainScreenState extends State<MainScreen> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "رئيسية"),
             BottomNavigationBarItem(icon: Icon(Icons.list), label: "طلبات"),
             BottomNavigationBarItem(icon: Icon(Icons.chat), label: "مراسلة"),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: "المستخدم"),
             BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: "مزيد"),
           ],
         ),

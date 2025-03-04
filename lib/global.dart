@@ -12,6 +12,7 @@ var check_farm;
 var farm_title;
 var old_check_farm;
 int user_type=1;
+var user_respose;
 
 const Colorapp =Color.fromARGB(255, 120, 60, 255);
 

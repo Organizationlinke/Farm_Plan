@@ -40,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
         .single();
 
     if (response .isNotEmpty) {
+      user_respose=response;
       user_level=response["level"];
       user_area=response["farm_code"];
       farm_title=response["shoet_farm_code"];
