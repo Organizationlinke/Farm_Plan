@@ -20,15 +20,35 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   //     []; // العناصر اللي هيتم عرضها في row2
 
   final List<String> selectedAreas = []; // الآن القائمة تحتوي على نصوص فقط
-
+ DateTime? currentDate;
+ bool checkdate=false;
   @override
   void initState() {
     super.initState();
     fetchAreas();
     checked();
     // fetchGroupedProcesses();
+    getCurrentDateFromSupabase();
   }
-
+ Future<DateTime?> getCurrentDateFromSupabase() async {
+    try {
+      final response = await supabase
+          .rpc('get_server_time'); // استدعاء دالة SQL نصنعها يدويًا
+      if (response != null) {
+        currentDate =
+            DateTime.parse(response.toString()).toLocal();
+            // .add(Duration(hours: 2));
+        String serverDateString = "${currentDate?.year}-${currentDate?.month}-${currentDate?.day}";
+      String deviceDateString = "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
+checkdate=serverDateString==deviceDateString;
+print('checkdate:$checkdate');
+        return DateTime.parse(response.toString());
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+    return null;
+  }
   Future<List<Map<String, dynamic>>> fetchGroupedProcesses() async {
     final response = await supabase.rpc('fetch_process_data', params: {
       'farm_code_param': '$New_user_area%',
@@ -59,8 +79,13 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
     );
 
     if (picked != null && picked != selectedDate) {
+     
       setState(() {
         selectedDate = picked;
+           String serverDateString = "${currentDate?.year}-${currentDate?.month}-${currentDate?.day}";
+      String deviceDateString = "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
+checkdate=serverDateString==deviceDateString;
+print('checkdate:$checkdate');
       });
     }
   }
@@ -188,9 +213,10 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
         body: Row(
           children: [
             Container(
+              width: 50,
               color: const Color.fromARGB(255, 235, 235, 235),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: areas.map((area) {
                   return GestureDetector(
@@ -249,6 +275,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => DataTableScreen(
+                                  checkdate: checkdate,
                                   selectedDate: selectedDate,
                                   processName: process['group_process_name'],
                                 ),
