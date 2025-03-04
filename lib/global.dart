@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
+var user_id;
 int user_level=0;
 var user_area;
 int new_level=0;

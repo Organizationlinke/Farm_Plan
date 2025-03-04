@@ -25,6 +25,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
   List<Map<String, dynamic>> _items = [];
   String selectedFilter = "الكل"; // الفلتر الافتراضي
   DateTime? currentDate;
+  final _cancel_reason = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -67,7 +68,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
                 : item['cancel'] == true
                     ? 'cancel'
                     : null;
-        _cancelReasons[item['id']] = TextEditingController();
+                    
+        _cancelReasons[item['id']] = TextEditingController(text: item['cancel_reason'] ?? '');
       }
     });
   }
@@ -135,7 +137,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
                     ? 'cancel_time'
                     : 'test_time';
 
-        // DateTime now = DateTime.now();
+        DateTime now = DateTime.now();
 
         await supabase
             .from('data_table')
@@ -143,7 +145,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
               'under_progress': status == 'under_progress',
               'finished': status == 'finished',
               'cancel': status == 'cancel',
-              stats_time: currentDate,
+              stats_time: now.toIso8601String(),
               'cancel_reason':
                   status == 'cancel' ? _cancelReasons[item['id']]!.text : null,
               // 'is_saved': 1 // 🔥 بعد الحفظ يتم تحديث is_saved إلى 1
@@ -426,7 +428,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
                           ),
                           if (_itemStatuses[item['id']] == 'cancel')
                             TextField(
-                              controller: _cancelReasons[item['id']],
+                              controller: 
+                              _cancelReasons[item['id']],
                               decoration:
                                   InputDecoration(labelText: 'سبب الإلغاء'),
                             ),
