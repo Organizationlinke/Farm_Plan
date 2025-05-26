@@ -22,6 +22,7 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   final List<String> selectedAreas = []; // الآن القائمة تحتوي على نصوص فقط
  DateTime? currentDate;
  bool checkdate=false;
+ bool _isUpdating = false;
   @override
   void initState() {
     super.initState();
@@ -107,6 +108,8 @@ print('checkdate:$checkdate');
   }
 
   void selectArea(Map<String, dynamic> area) async {
+       if (_isUpdating) return; // تجاهل الطلب لو فيه عملية شغالة
+        _isUpdating = true;
     String areaCode = area['farm_code']; // استخراج النص من الخريطة
     print('areaCode:$areaCode');
     if (!selectedAreas.contains(areaCode)) {
@@ -125,6 +128,7 @@ print('checkdate:$checkdate');
       setState(() {
         selectedAreas.add(areaCode2); // إضافة النص بدلاً من الخريطة
       });
+      _isUpdating = false;
     }
   }
 
@@ -132,6 +136,8 @@ print('checkdate:$checkdate');
   void removeArea(String areaCode) async {
     //
     // Old_user_area_OUT();
+      if (_isUpdating) return; // تجاهل الطلب لو فيه عملية شغالة
+        _isUpdating = true;
     New_user_area = New_user_area.replaceAll('-$areaCode', "");
     new_level--;
     print(New_user_area);
@@ -140,6 +146,7 @@ print('checkdate:$checkdate');
     setState(() {
       selectedAreas.remove(areaCode); // حذف العنصر النصي
     });
+    _isUpdating = false;
   }
 
   @override
@@ -213,7 +220,7 @@ print('checkdate:$checkdate');
         body: Row(
           children: [
             Container(
-              width: 50,
+              width: 65,
               color: const Color.fromARGB(255, 235, 235, 235),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

@@ -1,4 +1,5 @@
 import 'package:farmplanning/Main_process.dart';
+import 'package:farmplanning/UploadExcelScreen.dart';
 import 'package:farmplanning/global.dart';
 import 'package:farmplanning/users.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     MainProcessScreen(),
-    OrdersScreen(),
+    UploadExcelScreen(),
     ChatScreen(),
     UserProfileScreen(userData: user_respose,),
     MoreScreen(),
