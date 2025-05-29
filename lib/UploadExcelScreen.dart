@@ -205,7 +205,7 @@ for (var row in sheet.rows.skip(1)) {
           final upload = uploads[index];
           return Card(
             child: ListTile(
-                  title: Text('عملية رقم: ${upload['upload_id']}',style: TextStyle(color: Colorapp,fontSize:18,fontFamily: 'myfont')),
+                  title: Text('عملية رقم: ${upload['upload_id']}',style: TextStyle(color: MainFoantcolor,fontSize:18,fontFamily: 'myfont')),
                   subtitle: Text('تاريخ: ${upload['upload_date']}',style: TextStyle( color:color_under,fontFamily: 'myfont' )),
                   trailing: SizedBox(
                     width: 100, // علشان الـ Row تاخد مساحة كافية

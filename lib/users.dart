@@ -2,11 +2,11 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:farmplanning/global.dart';
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  final Map<String, dynamic> userData;
-  UserProfileScreen({required this.userData});
-
   @override
   _UserProfileScreenState createState() => _UserProfileScreenState();
 }
@@ -15,248 +15,222 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   final _nameController = TextEditingController();
   final _passController = TextEditingController();
   String? _selectedFarm;
-  Uint8List? _imageBytes; // استخدم `Uint8List` بدلاً من `File`
+  Uint8List? _imageBytes;
   bool _isLoading = false;
+  String? imageUrl;
+  Map<String, dynamic> userData = {};
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.userData['user_name'];
-    _passController.text = widget.userData['pass'];
-    _selectedFarm = widget.userData['farm_id'].toString();
+    _loadUserData();
   }
 
+  Future<void> _loadUserData() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('usertable')
+          .select()
+          .eq('id', user_id)
+          .single();
+
+      if (!mounted) return;
+      setState(() {
+        userData = response;
+        _nameController.text = userData['user_name'] ?? '';
+        _passController.text = userData['pass'] ?? '';
+        _selectedFarm = userData['farm_id']?.toString();
+        imageUrl = userData['photo_url'];
+      });
+
+      if (imageUrl != null && imageUrl!.isNotEmpty) {
+        final imageResponse = await http.get(Uri.parse(imageUrl!));
+        if (imageResponse.statusCode == 200) {
+          if (!mounted) return;
+          setState(() {
+            _imageBytes = imageResponse.bodyBytes;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading user: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل تحميل بيانات المستخدم')),
+      );
+    }
+  }
+
+//   Future<void> _loadUserData() async {
+//     try {
+//       final response = await Supabase.instance.client
+//           .from('usertable')
+//           .select()
+//           .eq('id', user_id)
+//           .single();
+// if (!mounted) return;
+//       setState(() {
+//         userData = response;
+//         _nameController.text = userData['user_name'] ?? '';
+//         _passController.text = userData['pass'] ?? '';
+//         _selectedFarm = userData['farm_id']?.toString();
+//         imageUrl = userData['photo_url'];
+//       });
+//       // تحميل الصورة وتحويلها إلى Uint8List
+//       if (imageUrl != null && imageUrl!.isNotEmpty) {
+//         print('Image URL: $imageUrl'); // debug
+//         final imageResponse = await http.get(Uri.parse(imageUrl!));
+//         if (imageResponse.statusCode == 200) {
+//           if (!mounted) return;
+//           setState(() {
+//             _imageBytes = imageResponse.bodyBytes;
+//           });
+//         } else {
+//           print('فشل تحميل الصورة: ${imageResponse.statusCode}');
+//         }
+//       }
+//     } catch (e) {
+//       print('Error loading user: $e');
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('فشل تحميل بيانات المستخدم')),
+//       );
+//     }
+//   }
+
   Future<void> _pickImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null) {
       setState(() {
-        _imageBytes = result.files.first.bytes; // حفظ الصورة كـ `Uint8List`
+        _imageBytes = result.files.first.bytes;
       });
     }
   }
 
   Future<void> _updateProfile() async {
-    String? imageUrl;
-    
-    if (_imageBytes != null) {
-      try {
-        final filePath = 'user_photo/${widget.userData['user_enter']}.png';
+    setState(() {
+      _isLoading = true;
+    });
 
-        // ✅ رفع الصورة باستخدام `uploadBinary`
-        await Supabase.instance.client.storage
-            .from('user_photo')
-            .uploadBinary(filePath, _imageBytes!, fileOptions: const FileOptions(upsert: true));
+    try {
+      // if (_imageBytes != null) {
+      //   // final filePath = 'user_photo/${userData['user_enter']}.png';
 
-        // ✅ الحصول على الرابط العام للصورة
-        imageUrl = Supabase.instance.client.storage.from('user_photo').getPublicUrl(filePath);
+      //   final randomFileName = const Uuid().v4(); // اسم عشوائي
+      //   final filePath = 'user_photo/$randomFileName.png';
 
-        setState(() {
-          widget.userData['photo_url'] = imageUrl;
-        });
+      //   final bucket = Supabase.instance.client.storage.from('user_photo');
 
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ أثناء رفع الصورة: $e')),
-        );
-        return;
+      //   // await bucket.remove([filePath]);
+      //   final oldUrl = userData['photo_url'];
+      //   if (oldUrl != null && oldUrl.contains('user_photo/')) {
+      //     final oldPath = oldUrl.split('user_photo/').last;
+      //     await bucket.remove(['user_photo/$oldPath']);
+      //   }
+
+      //   await bucket.uploadBinary(filePath, _imageBytes!,
+      //       fileOptions: const FileOptions(upsert: true));
+
+      //   imageUrl = bucket.getPublicUrl(filePath);
+      //   // imageUrl = bucket.getPublicUrl(filePath) + '?t=${DateTime.now().millisecondsSinceEpoch}';
+      // }
+      if (_imageBytes != null) {
+        final bucket = Supabase.instance.client.storage.from('user_photo');
+
+        // حذف الصورة القديمة
+        final oldUrl = userData['photo_url'];
+        if (oldUrl != null && oldUrl.contains('user_photo/')) {
+          final oldPath = oldUrl.split('user_photo/').last;
+          await bucket.remove(['user_photo/$oldPath']);
+        }
+
+        // رفع صورة جديدة باسم عشوائي
+        final randomFileName = const Uuid().v4();
+        final filePath = 'user_photo/$randomFileName.png';
+
+        await bucket.uploadBinary(filePath, _imageBytes!,
+            fileOptions: const FileOptions(upsert: true));
+
+        imageUrl = bucket.getPublicUrl(filePath);
       }
+
+      await Supabase.instance.client.from('users').update({
+        'user_name': _nameController.text,
+        'pass': _passController.text,
+        'farm_id': int.parse(_selectedFarm!),
+        if (imageUrl != null) 'photo_url': imageUrl,
+      }).eq('user_enter', userData['user_enter']);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم تحديث البيانات بنجاح')),
+      );
+    } catch (e) {
+      print('Error updating profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل تحديث البيانات')),
+      );
+    } finally {
+      await _loadUserData();
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
 
-    // ✅ تحديث بيانات المستخدم
-    await Supabase.instance.client.from('users').update({
-      'user_name': _nameController.text,
-      'pass': _passController.text,
-      'farm_id': int.parse(_selectedFarm!),
-      if (imageUrl != null) 'photo_url': imageUrl,
-    }).eq('user_enter', widget.userData['user_enter']);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('تم تحديث البيانات بنجاح')),
-    );
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _passController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('بيانات المستخدم')),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: _imageBytes != null
-                    ? MemoryImage(_imageBytes!) // استخدم `MemoryImage` بدلاً من `FileImage`
-                    : widget.userData['photo_url'] != null
-                        ? NetworkImage(widget.userData['photo_url']) as ImageProvider
-                        : NetworkImage('https://rfnklwurcdgbfjsatato.supabase.co/storage/v1/object/public/user_photo/default_avatar.png'),
+      appBar: AppBar(
+          backgroundColor: colorbar,
+          foregroundColor: Colorapp,
+          title: Text('بيانات المستخدم')),
+      body: userData.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: _imageBytes != null
+                          ? MemoryImage(_imageBytes!)
+                          : (imageUrl != null
+                              ? NetworkImage(imageUrl!) as ImageProvider
+                              : AssetImage('assets/default_avatar.png')),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: 'الاسم كامل'),
+                  ),
+                  TextField(
+                    controller: _passController,
+                    decoration: InputDecoration(labelText: 'كلمة السر'),
+                  ),
+                  SizedBox(height: 16),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 1, 131, 5),
+                            foregroundColor: Colors.white),
+                          onPressed: _updateProfile,
+                          child: Text('تحديث البيانات'),
+                        ),
+                ],
               ),
             ),
-
-            
-           
-            TextField(controller: _nameController, decoration: InputDecoration(labelText: 'الاسم كامل')),
-            TextField(controller: _passController, decoration: InputDecoration(labelText: 'كلمة السر')),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(onPressed: _updateProfile, child: Text('تحديث البيانات')),
-          ],
-        ),
-      ),
     );
   }
 }
-
-
-// import 'dart:io';
-// import 'package:farmplanning/global.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:flutter/material.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
-
-// class UserProfileScreen extends StatefulWidget {
-//   final Map<String, dynamic> userData;
-//   UserProfileScreen({required this.userData});
-
-//   @override
-//   _UserProfileScreenState createState() => _UserProfileScreenState();
-// }
-
-// class _UserProfileScreenState extends State<UserProfileScreen> {
-//   final _nameController = TextEditingController();
-//   final _passController = TextEditingController();
-//   String? _selectedFarm;
-//   File? _image;
-//   bool _isLoading = false;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _nameController.text = widget.userData['user_name'];
-//     _passController.text = widget.userData['pass'];
-//     _selectedFarm = widget.userData['farm_id'].toString();
-//   }
-// //  Future<void> _login() async {
-  
-
-// //     final response = await Supabase.instance.client
-// //         .from('usertable')
-// //         .select()
-// //         .eq('id', user_id)
-// //         .single();
-// //  }
-//   Future<void> _pickImage(ImageSource source) async {
-//     final pickedFile = await ImagePicker().pickImage(source: source);
-//     if (pickedFile != null) {
-//       setState(() {
-//         _image = File(pickedFile.path);
-//       });
-//     }
-//   }
-// Future<void> _updateProfile() async {
-//   String? imageUrl;
-  
-//   if (_image != null) {
-//     try {
-//       final filePath = 'user_photo/${widget.userData['user_enter']}.png';
-
-//       // رفع الصورة إلى Supabase
-//       await Supabase.instance.client.storage
-//           .from('user_photo')
-//           .upload(filePath, _image!, fileOptions: const FileOptions(upsert: true));
-
-//       // الحصول على الرابط العام
-//       imageUrl = Supabase.instance.client.storage.from('user_photo').getPublicUrl(filePath);
-
-//       // ✅ تحديث الحالة فورًا بعد رفع الصورة
-//       setState(() {
-//         widget.userData['photo_url'] = imageUrl;
-//       });
-
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('حدث خطأ أثناء رفع الصورة: $e')),
-//       );
-//       return;
-//     }
-//   }
-
-//   // تحديث بيانات المستخدم في الجدول
-//   await Supabase.instance.client.from('users').update({
-//     'user_name': _nameController.text,
-//     'pass': _passController.text,
-//     'farm_id': int.parse(_selectedFarm!),
-//     if (imageUrl != null) 'photo_url': imageUrl,
-//   }).eq('user_enter', widget.userData['user_enter']);
-
-//   ScaffoldMessenger.of(context).showSnackBar(
-//     SnackBar(content: Text('تم تحديث البيانات بنجاح')),
-//   );
-// }
-
-
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('بيانات المستخدم')),
-//       body: SingleChildScrollView(
-//         padding: EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             GestureDetector(
-//               onTap: () => _pickImage(ImageSource.gallery),
-//               child: CircleAvatar(
-//                 radius: 50,
-//                 backgroundImage: _image != null
-//                     ? FileImage(_image!)
-//                     : widget.userData['photo_url'] != null
-//                         ? NetworkImage(widget.userData['photo_url']) as ImageProvider
-//                         : NetworkImage('https://rfnklwurcdgbfjsatato.supabase.co/storage/v1/object/public/user_photo/default_avatar.png'),
-//               ),
-//             ),
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 IconButton(icon: Icon(Icons.photo_library), onPressed: () => _pickImage(ImageSource.gallery)),
-//                 IconButton(icon: Icon(Icons.camera_alt), onPressed: () => _pickImage(ImageSource.camera)),
-//               ],
-//             ),
-//             TextField(controller: _nameController, decoration: InputDecoration(labelText: 'الاسم كامل')),
-//             TextField(controller: _passController, decoration: InputDecoration(labelText: 'كلمة السر')),
-//             FutureBuilder(
-//               future: Supabase.instance.client.from('farm').select(),
-//               builder: (context, snapshot) {
-//                 if (snapshot.connectionState == ConnectionState.waiting) {
-//                   return CircularProgressIndicator();
-//                 }
-//                 if (!snapshot.hasData || snapshot.hasError) {
-//                   return Text('تعذر تحميل قائمة المزارع');
-//                 }
-//                 final farms = snapshot.data as List<dynamic>;
-//                 return DropdownButton<String>(
-//                   value: _selectedFarm,
-//                   onChanged: (value) => setState(() => _selectedFarm = value),
-//                   items: farms.map<DropdownMenuItem<String>>((farm) {
-//                     return DropdownMenuItem<String>(
-//                       value: farm['id'].toString(),
-//                       child: Text(farm['farm_code']),
-//                     );
-//                   }).toList(),
-//                 );
-//               },
-//             ),
-//             SizedBox(height: 20),
-//             _isLoading
-//                 ? CircularProgressIndicator()
-//                 : ElevatedButton(onPressed: _updateProfile, child: Text('تحديث البيانات')),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-

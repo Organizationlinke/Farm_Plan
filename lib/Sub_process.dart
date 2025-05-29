@@ -321,7 +321,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
                         children: [
                           Text(
                               '${item['items']} : ${item['qty']} ${item['unit']}',
-                              style: TextStyle(color: Colorapp)),
+                              style: TextStyle(color: MainFoantcolor)),
 
                           Row(
                             children: [
@@ -331,7 +331,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
                               PopupMenuButton<String>(
                                 icon: Icon(
                                   Icons.more_vert,
-                                  color: Colorapp,
+                                  color: MainFoantcolor,
                                 ),
                                 onSelected: (value) {
                                   if (value == 'full_transfer') {

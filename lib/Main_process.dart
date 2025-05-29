@@ -19,10 +19,10 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   // final List<Map<String, dynamic>> selectedAreas =
   //     []; // العناصر اللي هيتم عرضها في row2
 
-  final List<String> selectedAreas = []; // الآن القائمة تحتوي على نصوص فقط
- DateTime? currentDate;
- bool checkdate=false;
- bool _isUpdating = false;
+  // final List<String> selectedAreas = []; // الآن القائمة تحتوي على نصوص فقط
+  DateTime? currentDate;
+  bool checkdate = false;
+  bool _isUpdating = false;
   @override
   void initState() {
     super.initState();
@@ -31,18 +31,20 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
     // fetchGroupedProcesses();
     getCurrentDateFromSupabase();
   }
- Future<DateTime?> getCurrentDateFromSupabase() async {
+
+  Future<DateTime?> getCurrentDateFromSupabase() async {
     try {
       final response = await supabase
           .rpc('get_server_time'); // استدعاء دالة SQL نصنعها يدويًا
       if (response != null) {
-        currentDate =
-            DateTime.parse(response.toString()).toLocal();
-            // .add(Duration(hours: 2));
-        String serverDateString = "${currentDate?.year}-${currentDate?.month}-${currentDate?.day}";
-      String deviceDateString = "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
-checkdate=serverDateString==deviceDateString;
-print('checkdate:$checkdate');
+        currentDate = DateTime.parse(response.toString()).toLocal();
+        // .add(Duration(hours: 2));
+        String serverDateString =
+            "${currentDate?.year}-${currentDate?.month}-${currentDate?.day}";
+        String deviceDateString =
+            "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
+        checkdate = serverDateString == deviceDateString;
+        print('checkdate:$checkdate');
         return DateTime.parse(response.toString());
       }
     } catch (e) {
@@ -50,6 +52,7 @@ print('checkdate:$checkdate');
     }
     return null;
   }
+
   Future<List<Map<String, dynamic>>> fetchGroupedProcesses() async {
     final response = await supabase.rpc('fetch_process_data', params: {
       'farm_code_param': '$New_user_area%',
@@ -69,8 +72,6 @@ print('checkdate:$checkdate');
     throw Exception('تنسيق غير متوقع للبيانات: $response');
   }
 
-
-
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -80,13 +81,14 @@ print('checkdate:$checkdate');
     );
 
     if (picked != null && picked != selectedDate) {
-     
       setState(() {
         selectedDate = picked;
-           String serverDateString = "${currentDate?.year}-${currentDate?.month}-${currentDate?.day}";
-      String deviceDateString = "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
-checkdate=serverDateString==deviceDateString;
-print('checkdate:$checkdate');
+        String serverDateString =
+            "${currentDate?.year}-${currentDate?.month}-${currentDate?.day}";
+        String deviceDateString =
+            "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
+        checkdate = serverDateString == deviceDateString;
+        print('checkdate:$checkdate');
       });
     }
   }
@@ -108,8 +110,8 @@ print('checkdate:$checkdate');
   }
 
   void selectArea(Map<String, dynamic> area) async {
-       if (_isUpdating) return; // تجاهل الطلب لو فيه عملية شغالة
-        _isUpdating = true;
+    if (_isUpdating) return; // تجاهل الطلب لو فيه عملية شغالة
+    _isUpdating = true;
     String areaCode = area['farm_code']; // استخراج النص من الخريطة
     print('areaCode:$areaCode');
     if (!selectedAreas.contains(areaCode)) {
@@ -132,12 +134,11 @@ print('checkdate:$checkdate');
     }
   }
 
-
   void removeArea(String areaCode) async {
     //
     // Old_user_area_OUT();
-      if (_isUpdating) return; // تجاهل الطلب لو فيه عملية شغالة
-        _isUpdating = true;
+    if (_isUpdating) return; // تجاهل الطلب لو فيه عملية شغالة
+    _isUpdating = true;
     New_user_area = New_user_area.replaceAll('-$areaCode', "");
     new_level--;
     print(New_user_area);
@@ -172,25 +173,26 @@ print('checkdate:$checkdate');
                   ),
                   Row(
                     children: [
-                   
                       Directionality(
                         textDirection: TextDirection.ltr,
                         child: Row(
                           children: selectedAreas.map((areaCode) {
                             bool isLast = selectedAreas.last ==
                                 areaCode; // التحقق من آخر عنصر
-                        
+
                             return Container(
-                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 228, 230, 228),
+                                color: colorbar_bottom,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 children: [
                                   Text(
                                     areaCode,
-                                    style: const TextStyle(fontSize: 12),
+                                    style: const TextStyle(fontSize: 16,color:colorbar ),
                                   ),
                                   const SizedBox(width: 4),
                                   if (isLast) // إظهار أيقونة الإغلاق فقط للعنصر الأخير
@@ -199,7 +201,7 @@ print('checkdate:$checkdate');
                                       child: const Icon(
                                         Icons.close_rounded,
                                         color: Colors.red,
-                                        size: 12,
+                                        size: 20,
                                       ),
                                     ),
                                 ],
@@ -208,7 +210,9 @@ print('checkdate:$checkdate');
                           }).toList(),
                         ),
                       ),
-
+                      SizedBox(
+                        height: 10,
+                      ),
                       Text(user_area),
                     ],
                   )
@@ -234,7 +238,7 @@ print('checkdate:$checkdate');
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color:Colorapp,
+                        color: colorbar,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -266,15 +270,18 @@ print('checkdate:$checkdate');
                         child: ListTile(
                           title: Text(
                             '${process['group_process_name']} : ${process['allprocess']} عملية ',
-                            style: TextStyle(fontSize: 20, color:Colorapp),
+                            style: TextStyle(fontSize: 20, color: MainFoantcolor),
                           ),
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('انتظار: ${process['waited']}'),
-                              Text('تحت التشغيل: ${process['under_progress']}',style: TextStyle( color:color_under)),
-                              Text('منتهي:${process['finished']} ',style: TextStyle( color:color_finish)),
-                              Text('ملغي: ${process['cancel']}',style: TextStyle( color:color_cancel))
+                              Text('تحت التشغيل: ${process['under_progress']}',
+                                  style: TextStyle(color: color_under)),
+                              Text('منتهي:${process['finished']} ',
+                                  style: TextStyle(color: color_finish)),
+                              Text('ملغي: ${process['cancel']}',
+                                  style: TextStyle(color: color_cancel))
                             ],
                           ),
                           onTap: () {

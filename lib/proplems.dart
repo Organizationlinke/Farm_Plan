@@ -1,21 +1,20 @@
 // استورد الحزم المطلوبة
 import 'package:farmplanning/RequestDetailPage.dart';
+import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:html' as html;
 
-
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: RequestListPage(),
-    );
-  }
-}
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: RequestListPage(),
+//     );
+//   }
+// }
 
 // الشاشة الأولى: قائمة الطلبات
 class RequestListPage extends StatefulWidget {
@@ -33,10 +32,9 @@ class _RequestListPageState extends State<RequestListPage> {
   }
 
   Future<void> fetchRequests() async {
-    final response = await Supabase.instance.client
-        .from('proplems_view')
-        .select();
-        if (!mounted) return;
+    final response =
+        await Supabase.instance.client.from('proplems_view').select();
+    if (!mounted) return;
     setState(() {
       requests = response;
     });
@@ -46,6 +44,8 @@ class _RequestListPageState extends State<RequestListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: colorbar,
+        foregroundColor: Colorapp,
         title: Text('الطلبات'),
         actions: [
           ElevatedButton(
@@ -70,6 +70,9 @@ class _RequestListPageState extends State<RequestListPage> {
               title: Text(item['shoet_farm_code'] ?? ''),
               subtitle: Text(item['process_name'] ?? ''),
               trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 1, 131, 5),
+                    foregroundColor: Colors.white),
                 onPressed: () {
                   Navigator.push(
                     context,
