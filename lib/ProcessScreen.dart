@@ -19,13 +19,22 @@ class _ProcessScreenState extends State<ProcessScreen> {
     super.initState();
     loadProcesses();
   }
+Future<void> loadProcesses() async {
+  final response = await Supabase.instance.client
+      .from('process')
+      .select()
+      .eq('isdelete', 0)
+      .order('id');
 
-  Future<void> loadProcesses() async {
-    // جلب البيانات من Supabase أو أي مصدر آخر
-    final response =
-        await Supabase.instance.client.from('process').select().order('id');
-    setState(() => processes = List<Map<String, dynamic>>.from(response));
-  }
+  setState(() => processes = List<Map<String, dynamic>>.from(response));
+}
+
+  // Future<void> loadProcesses() async {
+  //   // جلب البيانات من Supabase أو أي مصدر آخر
+  //   final response =
+  //       await Supabase.instance.client.from('process').select().eq('isdelete',1).order('id');
+  //   setState(() => processes = List<Map<String, dynamic>>.from(response));
+  // }
 
   Future<void> saveProcess() async {
     final name = _controller.text;
@@ -44,7 +53,10 @@ class _ProcessScreenState extends State<ProcessScreen> {
   }
 
   Future<void> deleteProcess(int id) async {
-    await Supabase.instance.client.from('process').delete().eq('id', id);
+      await Supabase.instance.client
+          .from('process')
+          .update({'isdelete': 1}).eq('id', id);
+    // await Supabase.instance.client.from('process').delete().eq('id', id);
     await loadProcesses();
   }
 

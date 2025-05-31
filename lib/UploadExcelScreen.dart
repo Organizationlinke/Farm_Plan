@@ -61,7 +61,10 @@ class _UploadExcelScreenState extends State<UploadExcelScreen> {
   }
 
   Future<void> deleteUpload(int uploadId) async {
-    await supabase.from('data_table').delete().eq('upload_id', uploadId);
+     await supabase
+        .from('data_table')
+        .update({'isdelete': 1}).eq('upload_id', uploadId);
+    // await supabase.from('data_table').delete().eq('upload_id', uploadId);
     fetchUploads();
   }
 
@@ -251,6 +254,7 @@ class _UploadExcelScreenState extends State<UploadExcelScreen> {
               );
             },
           ),
+          if(widget.type==0)
           IconButton(
             icon: Icon(Icons.upload_file),
             tooltip: 'تحميل من Excel',

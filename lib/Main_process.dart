@@ -294,7 +294,11 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                                   processName: process['group_process_name'],
                                 ),
                               ),
-                            );
+                            ).then((_){
+                              setState(() {
+                                
+                              });
+                            });
                           },
                         ),
                       );

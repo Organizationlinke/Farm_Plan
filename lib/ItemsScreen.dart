@@ -27,7 +27,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
   }
 
   Future<void> loadProcesses() async {
-    final response = await Supabase.instance.client.from('process').select();
+    final response = await Supabase.instance.client.from('process').select().eq('isdelete', 0);
     setState(() => processes = List<Map<String, dynamic>>.from(response));
   }
 
@@ -65,7 +65,11 @@ class _ItemsScreenState extends State<ItemsScreen> {
   }
 
   Future<void> deleteItem(int id) async {
-    await Supabase.instance.client.from('items').delete().eq('id', id);
+    await Supabase.instance.client
+          .from('items')
+          .update({'isdelete': 1})
+          .eq('id', id);
+    // await Supabase.instance.client.from('items').delete().eq('id', id);
     await loadItems();
   }
 

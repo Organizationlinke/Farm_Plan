@@ -142,7 +142,11 @@ class _RequestListPageState extends State<RequestListPage2> {
                   MaterialPageRoute(
                     builder: (_) => RequestDetailPage(),
                   ),
-                );
+                ).then((_){
+                  setState(() {
+                    
+                  });
+                });
               },
               
               child: Text(

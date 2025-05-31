@@ -52,7 +52,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   Future<void> fetchProcesses() async {
     final response = await Supabase.instance.client
         .from('process')
-        .select('id, process_name');
+        .select('id, process_name').eq('isdelete', 0);
     if (!mounted) return;
     setState(() {
       processes = response;
