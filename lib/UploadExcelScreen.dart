@@ -35,7 +35,7 @@ class _UploadExcelScreenState extends State<UploadExcelScreen> {
 
   Future<void> fetchUploads() async {
 
-    final response = await supabase.from('upload_list').select().eq('Accept_upload', widget.type);
+    final response = await supabase.from('upload_list').select().eq('Accept_upload', widget.type).eq('isdelete',0);
 
     final unique =
         {for (var row in response) row['upload_id']: row}.values.toList();

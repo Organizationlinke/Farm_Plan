@@ -52,7 +52,7 @@ class _RequestListPageState extends State<RequestListPage2> {
       new_level2++;
       checked2();
       await fetchAreas();
-      await  fetchRequests();
+      await fetchRequests();
       setState(() {
         selectedAreas2.add(areaCode2);
       });
@@ -68,7 +68,7 @@ class _RequestListPageState extends State<RequestListPage2> {
     new_level2--;
     checked2();
     await fetchAreas();
-    await  fetchRequests();
+    await fetchRequests();
     setState(() {
       selectedAreas2.remove(areaCode);
     });
@@ -134,26 +134,41 @@ class _RequestListPageState extends State<RequestListPage2> {
             ],
           ),
           actions: [
-            if(user_respose['user_type']==2)
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RequestDetailPage(),
-                  ),
-                ).then((_){
-                  setState(() {
-                    
+            if (user_respose['user_type'] == 2)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RequestDetailPage(),
+                    ),
+                  ).then((_) {
+                    setState(() {});
                   });
-                });
-              },
-              
-              child: Text(
-                'إنشاء جديد',
-                style: TextStyle(color: colorbar),
+                },
+                child: Text(
+                  'إنشاء جديد',
+                  style: TextStyle(color: colorbar),
+                ),
               ),
-            )
+            SizedBox(
+              width: 10,
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () async {
+                New_user_area2 = user_area;
+                new_level2 = user_level + 1;
+                print('New_user_area2:$New_user_area2');
+                print('new_level2:$new_level2');
+
+                await fetchAreas();
+                 checked2();
+                selectedAreas2.clear();
+                await fetchRequests();
+                setState(() {});
+              },
+            ),
           ],
         ),
         body: Row(

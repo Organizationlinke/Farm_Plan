@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class DataTableScreen extends StatefulWidget {
   final String processName;
   final DateTime selectedDate;
- final bool checkdate;
+  final bool checkdate;
 
   const DataTableScreen({
     Key? key,
@@ -68,8 +68,9 @@ class _DataTableScreenState extends State<DataTableScreen> {
                 : item['cancel'] == true
                     ? 'cancel'
                     : null;
-                    
-        _cancelReasons[item['id']] = TextEditingController(text: item['cancel_reason'] ?? '');
+
+        _cancelReasons[item['id']] =
+            TextEditingController(text: item['cancel_reason'] ?? '');
       }
     });
   }
@@ -109,10 +110,9 @@ class _DataTableScreenState extends State<DataTableScreen> {
   }
 
   Future<void> _saveData() async {
-
     if (!widget.checkdate) {
-       _showAlertDialog('خطأ', 'لا يتم الحفظ الا علي تاريخ اليوم فقط.');
-        return;
+      _showAlertDialog('خطأ', 'لا يتم الحفظ الا علي تاريخ اليوم فقط.');
+      return;
     }
     for (var item in _items) {
       if (_itemStatuses[item['id']] == 'cancel' &&
@@ -179,7 +179,6 @@ class _DataTableScreenState extends State<DataTableScreen> {
     );
   }
 
- 
   void _showDatePickerAndTransfer(Map<String, dynamic> item,
       {required bool fullTransfer}) {
     DateTime selectedDate = DateTime.now();
@@ -322,12 +321,11 @@ class _DataTableScreenState extends State<DataTableScreen> {
                           Text(
                               '${item['items']} : ${item['qty']} ${item['unit']}',
                               style: TextStyle(color: MainFoantcolor)),
-
                           Row(
                             children: [
-                               Text(
-                              item['shoet_farm_code'],
-                              style: TextStyle(color: Colors.blue,fontSize: 12)),
+                              Text(item['shoet_farm_code'],
+                                  style: TextStyle(
+                                      color: Colors.blue, fontSize: 12)),
                               PopupMenuButton<String>(
                                 icon: Icon(
                                   Icons.more_vert,
@@ -343,20 +341,20 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'full_transfer',
-                                    child: Text('ترحيل العملية'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'partial_transfer',
-                                    child: Text('ترحيل جزء من العملية'),
-                                  ),
+                                  if (user_respose['can_post'] == 1)
+                                    PopupMenuItem(
+                                      value: 'full_transfer',
+                                      child: Text('ترحيل العملية'),
+                                    ),
+                                  if (user_respose['can_post'] == 1)
+                                    PopupMenuItem(
+                                      value: 'partial_transfer',
+                                      child: Text('ترحيل جزء من العملية'),
+                                    ),
                                 ],
                               ),
                             ],
                           )
-
-                       
                         ],
                       ),
                       subtitle: Column(
@@ -428,8 +426,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
                           ),
                           if (_itemStatuses[item['id']] == 'cancel')
                             TextField(
-                              controller: 
-                              _cancelReasons[item['id']],
+                              controller: _cancelReasons[item['id']],
                               decoration:
                                   InputDecoration(labelText: 'سبب الإلغاء'),
                             ),

@@ -192,7 +192,8 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                                 children: [
                                   Text(
                                     areaCode,
-                                    style: const TextStyle(fontSize: 16,color:colorbar ),
+                                    style: const TextStyle(
+                                        fontSize: 16, color: colorbar),
                                   ),
                                   const SizedBox(width: 4),
                                   if (isLast) // إظهار أيقونة الإغلاق فقط للعنصر الأخير
@@ -214,6 +215,18 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                         height: 10,
                       ),
                       Text(user_area),
+                      IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () async {
+                          New_user_area = user_area;
+                          new_level=user_level+1;
+                          await fetchAreas();
+                          checked();
+                          selectedAreas.clear();
+                          // fetchGroupedProcesses();
+                          await getCurrentDateFromSupabase();
+                        },
+                      ),
                     ],
                   )
                 ],
@@ -270,7 +283,8 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                         child: ListTile(
                           title: Text(
                             '${process['group_process_name']} : ${process['allprocess']} عملية ',
-                            style: TextStyle(fontSize: 20, color: MainFoantcolor),
+                            style:
+                                TextStyle(fontSize: 20, color: MainFoantcolor),
                           ),
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -294,10 +308,8 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
                                   processName: process['group_process_name'],
                                 ),
                               ),
-                            ).then((_){
-                              setState(() {
-                                
-                              });
+                            ).then((_) {
+                              setState(() {});
                             });
                           },
                         ),
