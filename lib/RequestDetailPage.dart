@@ -16,6 +16,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   List<dynamic> processes = [];
   List<dynamic> areas = [];
   int? selectedProcessId;
+  int? creatorid;
   TextEditingController noteController = TextEditingController();
   TextEditingController reasonController = TextEditingController();
   List<String> existingImageUrls = [];
@@ -70,6 +71,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       setState(() {
         selectedProcessId = data[0]['process_id'];
         selectedfarmId = data[0]['farm_id'];
+        creatorid= data[0]['user_id'];
         noteController.text = data[0]['note'] ?? '';
         reasonController.text = data[0]['reason'] ?? '';
         existingImageUrls = data
@@ -270,6 +272,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     ],
                   ),
                   SizedBox(height: 12),
+                  if(creatorid==user_id)
                   Center(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -285,6 +288,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     ),
                   ),
                   SizedBox(height: 20),
+                    if(creatorid==user_id)
                   Center(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(

@@ -52,6 +52,7 @@ class _RequestListPageState extends State<RequestListPage2> {
       new_level2++;
       checked2();
       await fetchAreas();
+      await  fetchRequests();
       setState(() {
         selectedAreas2.add(areaCode2);
       });
@@ -67,6 +68,7 @@ class _RequestListPageState extends State<RequestListPage2> {
     new_level2--;
     checked2();
     await fetchAreas();
+    await  fetchRequests();
     setState(() {
       selectedAreas2.remove(areaCode);
     });
@@ -132,6 +134,7 @@ class _RequestListPageState extends State<RequestListPage2> {
             ],
           ),
           actions: [
+            if(user_respose['user_type']==2)
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -141,6 +144,7 @@ class _RequestListPageState extends State<RequestListPage2> {
                   ),
                 );
               },
+              
               child: Text(
                 'إنشاء جديد',
                 style: TextStyle(color: colorbar),

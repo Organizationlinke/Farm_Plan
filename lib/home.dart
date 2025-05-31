@@ -3,7 +3,6 @@ import 'package:farmplanning/MoreScreen.dart';
 import 'package:farmplanning/UploadExcelScreen.dart';
 import 'package:farmplanning/global.dart';
 import 'package:farmplanning/proplems2.dart';
-import 'package:farmplanning/proplems.dart';
 import 'package:farmplanning/users.dart';
 import 'package:flutter/material.dart';
 
@@ -31,8 +30,8 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     MainProcessScreen(),
-    UploadExcelScreen(),
-    RequestListPage2(),
+   user_respose['Isadmain']==1? UploadExcelScreen(type: 0,):OrdersScreen(),
+     RequestListPage2(),
     ChatScreen(),
     UserProfileScreen(),
      MoreScreen(),
@@ -58,7 +57,7 @@ class _MainScreenState extends State<MainScreen> {
           items: [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "رئيسية"),
             BottomNavigationBarItem(icon: Icon(Icons.upload_file), label: "تحميل بيانات"),
-             BottomNavigationBarItem(icon: Icon(Icons.chat), label: "طلبات"),
+             BottomNavigationBarItem(icon: Icon(Icons.list), label: "طلبات"),
             BottomNavigationBarItem(icon: Icon(Icons.chat), label: "مراسلة"),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: "المستخدم"),
             BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: "مزيد"),
@@ -74,7 +73,7 @@ class _MainScreenState extends State<MainScreen> {
 class OrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text("📦 الطلبات", style: TextStyle(fontSize: 24)));
+    return Center(child: Text("📦 تحميل من اكسل", style: TextStyle(fontSize: 24)));
   }
 }
 
