@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 var user_id;
 int user_level=0;
 var user_area;
+var user_uuid;
 int new_level=0;
 String New_user_area='' ;
 String New_user_area2='' ;

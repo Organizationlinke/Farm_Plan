@@ -41,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (response .isNotEmpty) {
       user_id=response["id"];
+      user_uuid=response["uuid"];
       user_respose=response;
       user_level=response["level"];
       user_area=response["farm_code"];

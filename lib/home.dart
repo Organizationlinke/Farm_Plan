@@ -2,6 +2,7 @@ import 'package:farmplanning/Main_process.dart';
 import 'package:farmplanning/MoreScreen.dart';
 import 'package:farmplanning/UploadExcelScreen.dart';
 import 'package:farmplanning/global.dart';
+import 'package:farmplanning/message_users_list_page.dart';
 import 'package:farmplanning/proplems2.dart';
 import 'package:farmplanning/users.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,8 @@ class _MainScreenState extends State<MainScreen> {
     MainProcessScreen(),
    user_respose['Isadmain']==1? UploadExcelScreen(type: 0,):OrdersScreen(),
      RequestListPage2(),
-    ChatScreen(),
+    //  ChatScreen(),
+    MessageUsersListPage(currentUserId: user_id,currentUserUUID: user_uuid,),
     UserProfileScreen(),
      MoreScreen(),
   ];
