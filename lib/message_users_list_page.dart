@@ -1,4 +1,5 @@
 
+import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'chat_screen.dart';
@@ -25,9 +26,9 @@ class _MessageUsersListPageState extends State<MessageUsersListPage> {
 
   Future<void> fetchUsers() async {
     final response = await Supabase.instance.client
-        .from('message_list')
+        .from('usertable')
         .select()
-        .ilike('code', '%${widget.currentUserUUID}%')
+        // .ilike('code', '%${widget.currentUserUUID}%')
         .ilike('user_name', '%$searchText%');
 
     setState(() {
@@ -71,7 +72,8 @@ class _MessageUsersListPageState extends State<MessageUsersListPage> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => ChatScreen(
-                          code: user['code'],
+                         
+                          code:user['id']<user_id? user['uuid']+user_uuid:user_uuid+user['uuid'],
                           receiverName: user['user_name'],
                           receiverImage: user['photo_url'],
                           currentUserId: widget.currentUserId,
