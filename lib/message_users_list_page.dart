@@ -39,7 +39,9 @@ class _MessageUsersListPageState extends State<MessageUsersListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('المحادثات')),
+      appBar: AppBar(title: const Text('المحادثات'),
+        backgroundColor: colorbar,
+          foregroundColor: Colorapp,),
       body: Column(
         children: [
           Padding(
