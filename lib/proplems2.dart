@@ -221,7 +221,7 @@ class _RequestListPageState extends State<RequestListPage2> {
                         ),
                       ),
                       title: Text(item['shoet_farm_code'] ?? ''),
-                      subtitle: Text(item['process_name'] ?? ''),
+                      subtitle: Text('طلبية رقم :${item['id']} - العملية : ${item['process_name']}' ?? ''),
                       trailing: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             backgroundColor:

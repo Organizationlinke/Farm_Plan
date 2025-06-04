@@ -1,3 +1,4 @@
+import 'package:farmplanning/SolutionsFormScreen%20.dart';
 import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,11 +19,17 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   int? selectedProcessId;
   int? creatorid;
   TextEditingController noteController = TextEditingController();
+  TextEditingController refuseController = TextEditingController();
   TextEditingController reasonController = TextEditingController();
   List<String> existingImageUrls = [];
   List<PlatformFile> newPickedImages = [];
   bool isLoading = false;
   int? selectedfarmId;
+  String farmText = '';
+  String processText = '';
+  int refuse = 0;
+  int is_refuse = 0;
+  int proplems_status = 0;
 
   @override
   void initState() {
@@ -33,26 +40,28 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       loadData();
     }
   }
- Future<void> fetchAreas() async {
-   
+
+  Future<void> fetchAreas() async {
     final result = await Supabase.instance.client
         .from('farm')
         .select()
         .like('farm_code', '$New_user_area2%')
         .eq('level', 5);
-      
- if (!mounted) return;
+
+    if (!mounted) return;
     if (result.isNotEmpty) {
       setState(() {
-      areas=result;
+        areas = result;
         // areas.addAll(result.map((e) => e).toList());
       });
     }
   }
+
   Future<void> fetchProcesses() async {
     final response = await Supabase.instance.client
         .from('process')
-        .select('id, process_name').eq('isdelete', 0);
+        .select('id, process_name')
+        .eq('isdelete', 0);
     if (!mounted) return;
     setState(() {
       processes = response;
@@ -70,10 +79,15 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       if (!mounted) return;
       setState(() {
         selectedProcessId = data[0]['process_id'];
+        farmText = data[0]['shoet_farm_code'];
+        processText = data[0]['process_name'];
         selectedfarmId = data[0]['farm_id'];
-        creatorid= data[0]['user_id'];
+        creatorid = data[0]['user_id'];
         noteController.text = data[0]['note'] ?? '';
         reasonController.text = data[0]['reason'] ?? '';
+        is_refuse = data[0]['is_refuse'] ?? 0;
+        proplems_status = data[0]['proplems_status'] ?? 0;
+        refuseController.text = data[0]['refuse_reason'] ?? '';
         existingImageUrls = data
             .map<String>((e) => e['pic_url'] ?? '')
             .where((e) => e.isNotEmpty)
@@ -93,6 +107,16 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     if (result != null) {
       newPickedImages.addAll(result.files);
     }
+    setState(() => isLoading = false);
+  }
+
+  Future<void> saveRefuse() async {
+    setState(() => isLoading = true);
+    await Supabase.instance.client.from('proplems').update({
+      'is_refuse': 1,
+      'refuse_reason': refuseController.text,
+    }).eq('id', widget.id!);
+
     setState(() => isLoading = false);
   }
 
@@ -165,7 +189,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     setState(() => isLoading = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('تم الحفظ بنجاح')),
+      const SnackBar(content: Text('تم الحفظ بنجاح')),
     );
     Navigator.pop(context);
   }
@@ -175,13 +199,15 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     return Stack(
       children: [
         Directionality(
-          textDirection:TextDirection.rtl,
+          textDirection: TextDirection.rtl,
           child: Scaffold(
-            appBar: AppBar(title: Text('عرض الطلب'),
-            backgroundColor: colorbar,
-          foregroundColor: Colorapp,),
+            appBar: AppBar(
+              title: const Text('عرض الطلب'),
+              backgroundColor: colorbar,
+              foregroundColor: Colorapp,
+            ),
             body: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -193,10 +219,21 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         child: Text(item['process_name']),
                       );
                     }).toList(),
-                    onChanged: (val) => setState(() => selectedProcessId = val),
-                    decoration: InputDecoration(labelText: 'العملية'),
+                    // onChanged: (val) => setState(() => selectedProcessId = val),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedProcessId = val;
+                        processText = processes.firstWhere(
+                            (element) => element['id'] == val)['process_name'];
+                      });
+                    },
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        labelText: 'العملية',
+                        labelStyle: const TextStyle(color: Colors.blue)),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: selectedfarmId,
                     items: areas.map((item) {
@@ -205,23 +242,44 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         child: Text(item['farm_code']),
                       );
                     }).toList(),
-                    onChanged: (val) => setState(() => selectedfarmId = val),
-                    decoration: InputDecoration(labelText: 'المزرعه'),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedfarmId = val;
+                        farmText = areas.firstWhere(
+                            (element) => element['id'] == val)['farm_code'];
+                      });
+                    },
+                    // onChanged: (val) => setState(
+                    //   () => selectedfarmId = val,
+                    // ),
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        labelText: 'المزرعه',
+                        labelStyle: const TextStyle(color: Colors.blue)),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: noteController,
-                    decoration: InputDecoration(labelText: 'عرض المشكلة'),
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        labelText: 'عرض المشكلة',
+                        labelStyle: const TextStyle(color: Colors.blue)),
                     maxLines: 4,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: reasonController,
-                    decoration: InputDecoration(labelText: 'سبب المشكلة'),
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        labelText: 'سبب المشكلة',
+                        labelStyle: const TextStyle(color: Colors.blue)),
                     maxLines: 4,
                   ),
-                  SizedBox(height: 16),
-          
+                  const SizedBox(height: 16),
+
                   // معاينة الصور الحالية
                   Wrap(
                     spacing: 8,
@@ -241,7 +299,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                     width: 100, height: 100, fit: BoxFit.cover),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.close, color: Colors.red),
                                 onPressed: () {
                                   setState(() => existingImageUrls.remove(url));
                                 },
@@ -262,7 +321,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                     width: 100, height: 100, fit: BoxFit.cover),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.close, color: Colors.red),
                                 onPressed: () {
                                   setState(() => newPickedImages.remove(file));
                                 },
@@ -271,37 +331,215 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                           )),
                     ],
                   ),
-                  SizedBox(height: 12),
-                  if(creatorid==user_id)
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  MainFoantcolor,
-                              foregroundColor: Colors.white),
-                      onPressed: uploadImages,
-                      child: SizedBox(
-                        width: 150,
-                        height: 40,
-                        child: Center(child: Text('تحميل صور',style: TextStyle(fontSize: 16),))),
-                      
+                  const SizedBox(height: 12),
+
+                  if (is_refuse == 0 && proplems_status == 0)
+                    Column(
+                      children: [
+                        if (creatorid == user_id || creatorid == null)
+                          Center(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: MainFoantcolor,
+                                  foregroundColor: Colors.white),
+                              onPressed: uploadImages,
+                              child: const SizedBox(
+                                  width: 150,
+                                  height: 40,
+                                  child: Center(
+                                      child: Text(
+                                    'تحميل صور',
+                                    style: TextStyle(fontSize: 16),
+                                  ))),
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        if (creatorid == user_id || creatorid == null)
+                          Center(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: color_Button,
+                                  foregroundColor: Colors.white),
+                              onPressed: saveRequest,
+                              child: const SizedBox(
+                                  width: 150,
+                                  height: 40,
+                                  child: Center(
+                                      child: Text(
+                                    'حفظ',
+                                    style: TextStyle(fontSize: 16),
+                                  ))),
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        if (user_respose['can_solution'] == 1)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: color_Button,
+                                    foregroundColor: Colors.white),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => SolutionsFormScreen(
+                                        farmId: selectedfarmId!,
+                                        processId: selectedProcessId!,
+                                        problemsId: widget.id!,
+                                        farmText: farmText,
+                                        processText: processText,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const SizedBox(
+                                    width: 150,
+                                    height: 40,
+                                    child: Center(
+                                        child: Text(
+                                      'تقديم حل',
+                                      style: TextStyle(fontSize: 16),
+                                    ))),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: color_cancel,
+                                    foregroundColor: Colors.white),
+                                onPressed: () {
+                                  setState(() {
+                                    refuse = 1;
+                                  });
+                                },
+                                child: const SizedBox(
+                                    width: 150,
+                                    height: 40,
+                                    child: Center(
+                                        child: Text(
+                                      'رفض الطلب',
+                                      style: TextStyle(fontSize: 16),
+                                    ))),
+                              ),
+                            ],
+                          ),
+                        if (user_respose['can_solution'] == 1 && refuse == 1)
+                          Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: refuseController,
+                                maxLines: 2,
+                                decoration: InputDecoration(
+                                  labelText: 'سبب رفض الطلب',
+                                  // labelStyle: TextStyle(color: Colors.blue),
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: color_Button,
+                                        foregroundColor: Colors.white),
+                                    onPressed: () async {
+                                      await saveRefuse();
+                                    },
+                                    child: const SizedBox(
+                                        width: 150,
+                                        height: 40,
+                                        child: Center(
+                                            child: Text(
+                                          'حفظ معلومات الرفض',
+                                          style: TextStyle(fontSize: 16),
+                                        ))),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: color_cancel,
+                                        foregroundColor: Colors.white),
+                                    onPressed: () {
+                                      setState(() {
+                                        refuse = 0;
+                                      });
+                                    },
+                                    child: const SizedBox(
+                                        width: 150,
+                                        height: 40,
+                                        child: Center(
+                                            child: Text(
+                                          'الغاء',
+                                          style: TextStyle(fontSize: 16),
+                                        ))),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 20),
-                    if(creatorid==user_id)
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 1, 131, 5),
-                              foregroundColor: Colors.white),
-                      onPressed: saveRequest,
-                      child: SizedBox(
-                        width: 150,
-                        height: 40,
-                        child: Center(child: Text('حفظ',style: TextStyle(fontSize: 16),))),
-                    ),
-                  ),
+                  const SizedBox(height: 15),
+                  Column(
+                    children: [
+                      if (is_refuse == 1)
+                        Column(
+                          children: [
+                            Text('الحالة : الطلب مرفوض',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: MainFoantcolor,
+                                    fontSize: 20)),
+                            const SizedBox(height: 12),
+                            Text('سبب الرفض : ${refuseController.text}',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: color_cancel,
+                                    fontSize: 18)),
+                          ],
+                        ),
+                      if (proplems_status > 0)
+                        Column(
+                          children: [
+                            Text('الحالة : تم تقديم حل',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: MainFoantcolor,
+                                    fontSize: 20)),
+                            const SizedBox(height: 12),
+                            TextButton(
+                                style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(
+                                        color_Button)),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => SolutionsFormScreen(
+                                        farmId: selectedfarmId!,
+                                        processId: selectedProcessId!,
+                                        problemsId: widget.id!,
+                                        farmText: farmText,
+                                        processText: processText,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('عرض الحل',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 15)),
+                                ))
+                          ],
+                        ),
+                    ],
+                  )
                 ],
               ),
             ),
@@ -310,7 +548,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         if (isLoading)
           Container(
             color: Colors.black.withOpacity(0.5),
-            child: Center(child: CircularProgressIndicator()),
+            child: const Center(child: CircularProgressIndicator()),
           ),
       ],
     );

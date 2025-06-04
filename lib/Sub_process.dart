@@ -1,5 +1,6 @@
 import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DataTableScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
   List<Map<String, dynamic>> _items = [];
   String selectedFilter = "الكل"; // الفلتر الافتراضي
   DateTime? currentDate;
+  Map<int, TextEditingController> _processcontroller = {};
+
   final _cancel_reason = TextEditingController();
   @override
   void initState() {
@@ -71,6 +74,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
 
         _cancelReasons[item['id']] =
             TextEditingController(text: item['cancel_reason'] ?? '');
+        _processcontroller[item['id']] =
+            TextEditingController(text: item['actual_qty'].toString()=='null'?'':item['actual_qty'].toString() );
       }
     });
   }
@@ -120,6 +125,11 @@ class _DataTableScreenState extends State<DataTableScreen> {
         _showAlertDialog('خطأ', 'يجب إدخال سبب الإلغاء.');
         return;
       }
+      if (item['process_id'] == 5 &&
+          _processcontroller[item['id']]!.text.isEmpty &&_itemStatuses[item['id']] == 'finished') {
+        _showAlertDialog('خطأ', 'يجب إدخال عدد ساعات الري الفعليه.');
+        return;
+      }
     }
 
     bool confirm = await _showConfirmationDialog();
@@ -137,6 +147,14 @@ class _DataTableScreenState extends State<DataTableScreen> {
                     ? 'cancel_time'
                     : 'test_time';
 
+        String? stats_user = status == 'under_progress'
+            ? 'user_under_progress'
+            : status == 'finished'
+                ? 'user_finished'
+                : status == 'cancel'
+                    ? 'user_cancel'
+                    : 'user_test';
+
         DateTime now = DateTime.now();
 
         await supabase
@@ -146,8 +164,13 @@ class _DataTableScreenState extends State<DataTableScreen> {
               'finished': status == 'finished',
               'cancel': status == 'cancel',
               stats_time: now.toIso8601String(),
+              stats_user: user_id,
               'cancel_reason':
                   status == 'cancel' ? _cancelReasons[item['id']]!.text : null,
+              'actual_qty': item['process_id'] == 5 &&_itemStatuses[item['id']] == 'finished'
+                  ? _processcontroller[item['id']]!.text
+                  : 0,
+              'out_source': item['out_source'] ?? false, // ✅ أضف هذا السطر
               // 'is_saved': 1 // 🔥 بعد الحفظ يتم تحديث is_saved إلى 1
             })
             .eq('id', item['id']) // ✅ تحديث الصف بناءً على ID
@@ -270,8 +293,9 @@ class _DataTableScreenState extends State<DataTableScreen> {
       'qty': qty,
       'farm_id': item['farm_id'],
       'old_id': item['id'],
+      'user_post': user_id
     });
-    _showAlertDialog('نجاح', 'تمت الترحيل بنجاح');
+    _showAlertDialog('نجاح', 'تم الترحيل بنجاح');
   }
 
   @override
@@ -312,15 +336,62 @@ class _DataTableScreenState extends State<DataTableScreen> {
                   bool underProgressNotNull =
                       item['under_progress_time'] != null;
                   bool cancel_notnull = item['cancel_time'] != null;
+
                   return Card(
                     margin: EdgeInsets.all(10),
                     child: ListTile(
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                              '${item['items']} : ${item['qty']} ${item['unit']}',
-                              style: TextStyle(color: MainFoantcolor)),
+                          Row(
+                            children: [
+                              Text(
+                                  '${item['items']} : ${item['qty']} ${item['unit']}',
+                                  style: TextStyle(color: MainFoantcolor)),
+                              SizedBox(
+                                width: 15,
+                              ),
+                              if (item['is_out_source'] == 1)
+                                Row(
+                                  children: [
+                                    Text(
+                                      'عماله خارجية',
+                                      style: TextStyle(color: color_under),
+                                    ),
+                                    Checkbox(
+                                      value: item['out_source'] ?? false,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          item['out_source'] = val!;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              if (item['process_id'] == 5&&_itemStatuses[item['id']] == 'finished')
+                                SizedBox(
+                                  width: 150,
+                                  child: TextField(
+                                    controller: _processcontroller[item['id']],
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d*\.?\d{0,}$')),
+                                    ],
+                                    decoration: InputDecoration(
+                                      labelText: 'كمية الري الفعلية',
+                                    ),
+                                  ),
+                                  // TextField(
+                                  //   controller: _processcontroller[item['id']],
+                                  //   decoration: InputDecoration(
+                                  //       labelText: 'كمية الري الفعلية'),
+                                  // ),
+                                ),
+                            ],
+                          ),
                           Row(
                             children: [
                               Text(item['shoet_farm_code'],

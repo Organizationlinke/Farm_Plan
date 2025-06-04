@@ -3,6 +3,7 @@ import 'dart:html' as html;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:farmplanning/global.dart';
+import 'package:flutter/rendering.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -33,8 +34,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final Stream<List<Map<String, dynamic>>> messageStream;
+  // Map<String, GlobalKey> messageKeys = {};
   final fileName = '${const Uuid().v4()}.jpg';
   final Map<String, GlobalKey> _messageKeys = {};
+  final Map<String, int> _messageIndexes = {};
 
   html.MediaRecorder? _mediaRecorder;
   List<html.Blob> _chunks = [];
@@ -310,7 +313,7 @@ class _ChatScreenState extends State<ChatScreen> {
             decoration: BoxDecoration(
               // color: isMe ? Colors.green[100] : Colors.grey[200],
               color: highlightedMessageId == msg['id'].toString()
-                  ? Colors.yellow[300]
+                  ? Colors.yellow[100]
                   : isMe
                       ? Colors.green[100]
                       : Colors.grey[200],
@@ -384,6 +387,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           onTap: () {
                             final replyKey =
                                 _messageKeys[replyMsg['id'].toString()];
+                            scrollToMessage(replyMsg['id'].toString());
                             if (replyKey != null &&
                                 replyKey.currentContext != null) {
                               Scrollable.ensureVisible(
@@ -402,19 +406,6 @@ class _ChatScreenState extends State<ChatScreen> {
                               });
                             }
                           },
-
-                          // onTap: () {
-                          //   final replyKey =
-                          //       _messageKeys[replyMsg['id'].toString()];
-                          //   if (replyKey != null &&
-                          //       replyKey.currentContext != null) {
-                          //     Scrollable.ensureVisible(
-                          //       replyKey.currentContext!,
-                          //       duration: const Duration(milliseconds: 300),
-                          //       curve: Curves.easeInOut,
-                          //     );
-                          //   }
-                          // },
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             margin: const EdgeInsets.only(bottom: 4),
@@ -426,41 +417,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         );
                       }
-
-                      // if (snapshot.hasData) {
-                      //   final replyMsg = snapshot.data!;
-                      //   return GestureDetector(
-                      //     onTap: () {
-                      //       final replyKey =
-                      //           _messageKeys[replyMsg['id'].toString()];
-                      //       if (replyKey != null &&
-                      //           replyKey.currentContext != null) {
-                      //         Scrollable.ensureVisible(
-                      //           replyKey.currentContext!,
-                      //           duration: const Duration(milliseconds: 300),
-                      //           curve: Curves.easeInOut,
-                      //         );
-                      //       }
-                      //     },
-                      //     child: Container(
-                      //       padding: const EdgeInsets.all(6),
-                      //       margin: const EdgeInsets.only(bottom: 4),
-                      //       decoration: BoxDecoration(
-                      //         color: Colors.grey[300],
-                      //         borderRadius: BorderRadius.circular(4),
-                      //       ),
-                      //       child: Text(
-                      //         replyMsg['message'] ?? '[ملف]',
-                      //         style: const TextStyle(
-                      //           fontStyle: FontStyle.italic,
-                      //           fontSize: 12,
-                      //           decoration: TextDecoration
-                      //               .underline, // توضح أنه يمكن الضغط عليه
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   );
-                      // }
 
                       return const SizedBox();
                     },
@@ -478,6 +434,49 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+void scrollToMessage(String messageId) async {
+  final index = _messageIndexes[messageId];
+  if (index != null) {
+    await _scrollController.animateTo(
+      index * 100.0, // بافتراض كل رسالة تقريبًا ارتفاعها 100
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+
+    await Future.delayed(const Duration(milliseconds: 300)); // استنى تتبني
+
+    final key = _messageKeys[messageId];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 300),
+        alignment: 0.5,
+      );
+      setState(() {
+        highlightedMessageId = messageId;
+      });
+      Future.delayed(const Duration(seconds: 5), () {
+        setState(() {
+          highlightedMessageId = null;
+        });
+      });
+    }
+  }
+}
+
+  // void scrollToMessage(String messageId) {
+  //   final key = _messageKeys[messageId];
+  //   print('key:$key');
+  //   print('key.currentContext:${key?.currentContext}');
+  //   if (key != null && key.currentContext != null) {
+  //     Scrollable.ensureVisible(
+  //       key.currentContext!,
+  //       duration: Duration(milliseconds: 300),
+  //       curve: Curves.easeInOut,
+  //       alignment: 0.5, // يخلي الرسالة في نص الشاشة تقريبا
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -523,9 +522,19 @@ class _ChatScreenState extends State<ChatScreen> {
                 return ListView.builder(
                   controller: _scrollController,
                   itemCount: messages.length,
-                  itemBuilder: (context, index) =>
-                      buildMessageTile(messages[index]),
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    _messageIndexes[msg['id'].toString()] = index;
+                    return buildMessageTile(msg);
+                  },
                 );
+
+                // return ListView.builder(
+                //   controller: _scrollController,
+                //   itemCount: messages.length,
+                //   itemBuilder: (context, index) =>
+                //       buildMessageTile(messages[index]),
+                // );
               },
             ),
           ),

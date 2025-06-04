@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 class UploadExcelScreen extends StatefulWidget {
     final int type;
@@ -238,65 +238,68 @@ class _UploadExcelScreenState extends State<UploadExcelScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: colorbar,
-        foregroundColor: Colorapp,
-        title: Text('تحميل بيانات من Excel'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.download),
-            tooltip: 'تحميل قالب Excel',
-            onPressed: () async {
-              downloadExcelTemplateWeb();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('تم تحميل قالب Excel بنجاح')),
-              );
-            },
-          ),
-          if(widget.type==0)
-          IconButton(
-            icon: Icon(Icons.upload_file),
-            tooltip: 'تحميل من Excel',
-            onPressed: uploadFromExcel,
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: uploads.length,
-        itemBuilder: (context, index) {
-          final upload = uploads[index];
-          return Card(
-            child: ListTile(
-              title: Text('عملية رقم: ${upload['upload_id']}',
-                  style: TextStyle(
-                      color: MainFoantcolor,
-                      fontSize: 18,
-                      fontFamily: 'myfont')),
-              subtitle: Text('تاريخ: ${upload['upload_date']}',
-                  style: TextStyle(color: color_under, fontFamily: 'myfont')),
-              trailing: SizedBox(
-                width: 100, // علشان الـ Row تاخد مساحة كافية
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if(widget.type==0)
-                    IconButton(
-                      icon: Icon(Icons.check_circle, color: Colors.green),
-                      tooltip: 'قبول',
-                      onPressed: () => _confirmAccept(upload['upload_id']),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      tooltip: 'حذف',
-                      onPressed: () => _confirmDelete(upload['upload_id']),
-                    ),
-                  ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: colorbar,
+          foregroundColor: Colorapp,
+          title: Text('تحميل بيانات من Excel'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.download),
+              tooltip: 'تحميل قالب Excel',
+              onPressed: () async {
+                downloadExcelTemplateWeb();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('تم تحميل قالب Excel بنجاح')),
+                );
+              },
+            ),
+            if(widget.type==0)
+            IconButton(
+              icon: Icon(Icons.upload_file),
+              tooltip: 'تحميل من Excel',
+              onPressed: uploadFromExcel,
+            ),
+          ],
+        ),
+        body: ListView.builder(
+          itemCount: uploads.length,
+          itemBuilder: (context, index) {
+            final upload = uploads[index];
+            return Card(
+              child: ListTile(
+                title: Text('عملية رقم: ${upload['upload_id']}',
+                    style: TextStyle(
+                        color: MainFoantcolor,
+                        fontSize: 18,
+                        fontFamily: 'myfont')),
+                subtitle: Text('تاريخ: ${upload['upload_date']}',
+                    style: TextStyle(color: color_under, fontFamily: 'myfont')),
+                trailing: SizedBox(
+                  width: 100, // علشان الـ Row تاخد مساحة كافية
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if(widget.type==0)
+                      IconButton(
+                        icon: Icon(Icons.check_circle, color: Colors.green),
+                        tooltip: 'قبول',
+                        onPressed: () => _confirmAccept(upload['upload_id']),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        tooltip: 'حذف',
+                        onPressed: () => _confirmDelete(upload['upload_id']),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
