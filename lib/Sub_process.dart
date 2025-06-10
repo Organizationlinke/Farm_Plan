@@ -363,6 +363,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                       onChanged: (val) {
                                         setState(() {
                                           item['out_source'] = val!;
+                                          print('out_source${item['out_source']}');
                                         });
                                       },
                                     ),
@@ -384,11 +385,6 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                       labelText: 'كمية الري الفعلية',
                                     ),
                                   ),
-                                  // TextField(
-                                  //   controller: _processcontroller[item['id']],
-                                  //   decoration: InputDecoration(
-                                  //       labelText: 'كمية الري الفعلية'),
-                                  // ),
                                 ),
                             ],
                           ),

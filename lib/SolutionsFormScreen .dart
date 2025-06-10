@@ -31,7 +31,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
   List<Map<String, dynamic>> itemsList = [];
   int statuse = 0;
   TextEditingController refuseController = TextEditingController();
-   int is_refuse = 0;
+  int? is_refuse ;
   @override
   void initState() {
     super.initState();
@@ -40,7 +40,6 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
       fetchExistingData();
     }
     fetchRefuse();
-
   }
 
   Future<void> saveRefuse() async {
@@ -61,8 +60,9 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
     if (response.isNotEmpty) {
       final data = response.first;
       refuseController.text = data['refuse_solution_reason'] ?? '';
-      is_refuse=1;
-    
+      is_refuse = 1;
+    } else {
+      is_refuse = 0;
     }
   }
 
@@ -85,8 +85,8 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
     if (response.isNotEmpty) {
       final data = response.first;
       if (data['date_from'] != null) {
-  selectedDate = DateTime.tryParse(data['date_from']);
-}
+        selectedDate = DateTime.tryParse(data['date_from']);
+      }
 
       // selectedDate = DateTime.parse(data['date_from']);
       noteController.text = data['note'] ?? '';
@@ -386,14 +386,18 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (user_respose['can_solution'] == 1 && statuse < 2&&is_refuse != 1)
+              if (user_respose['can_solution'] == 1 &&
+                  statuse < 2 &&
+                  is_refuse == 0)
                 ElevatedButton.icon(
                   icon: const Icon(Icons.save),
                   label: const Text('حفظ'),
                   onPressed: saveData,
                 ),
-                // if (is_refuse != 1 ||statuse!=2)
-              if (user_respose['accept_solution'] == 1 && statuse < 2&&is_refuse != 1)
+              // if (is_refuse != 1 ||statuse!=2)
+              if (user_respose['accept_solution'] == 1 &&
+                  statuse < 2 &&
+                   is_refuse == 0)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -408,14 +412,12 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                       onPressed: () {
                         setState(() {
                           refuse = 1;
-                         
                         });
                       },
                     ),
-                    
                   ],
                 ),
-                
+
               if (user_respose['accept_solution'] == 1 && refuse == 1)
                 Column(
                   children: [
@@ -470,37 +472,36 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                         ),
                       ],
                     ),
-                     
                   ],
                 ),
-                 const SizedBox(height: 15),
-                      
-                  Column(
-                    children: [
-                      if (is_refuse == 1)
-                        Column(
-                          children: [
-                            Text('الحالة : الطلب مرفوض',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: MainFoantcolor,
-                                    fontSize: 20)),
-                            const SizedBox(height: 12),
-                            Text('سبب الرفض : ${refuseController.text}',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: color_cancel,
-                                    fontSize: 18)),
-                          ],
-                        ),
-                      if (statuse == 2)
-                        Text('الحالة : تم الموافقه علي الحل',
+              const SizedBox(height: 15),
+
+              Column(
+                children: [
+                  if (is_refuse == 1)
+                    Column(
+                      children: [
+                        Text('الحالة : الطلب مرفوض',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: MainFoantcolor,
                                 fontSize: 20)),
-                    ],
-                  )
+                        const SizedBox(height: 12),
+                        Text('سبب الرفض : ${refuseController.text}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: color_cancel,
+                                fontSize: 18)),
+                      ],
+                    ),
+                  if (statuse == 2)
+                    Text('الحالة : تم الموافقه علي الحل',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: MainFoantcolor,
+                            fontSize: 20)),
+                ],
+              )
             ],
           ),
         ),

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class ChatScreen extends StatefulWidget {
   final String code;
@@ -30,6 +31,9 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final ItemScrollController _itemScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
   String? highlightedMessageId;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -49,6 +53,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String? pendingImageName;
 
   Map<String, dynamic>? replyTo;
+  Set<String> temporarilyUnread = {};
 
   @override
   void initState() {
@@ -57,7 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
         .from('messages')
         .stream(primaryKey: ['id'])
         .eq('code', widget.code)
-        .order('created_at')
+        .order('created_at', ascending: false)
         .map((event) => event);
     markMessagesAsRead();
   }
@@ -69,13 +74,48 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> markMessagesAsRead() async {
+    final result = await Supabase.instance.client
+        .from('messages')
+        .select('id')
+        .eq('code', widget.code)
+        .neq('user_id', widget.currentUserId)
+        .eq('status', 'sent');
+
+    for (var msg in result) {
+      temporarilyUnread.add(msg['id'].toString());
+    }
+
+    setState(() {});
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() {
+          temporarilyUnread.clear();
+        });
+      }
+    });
+
+    // Future.delayed(const Duration(seconds: 10), () {
+    //   if (mounted) return;
+    //   setState(() {
+    //     temporarilyUnread.clear();
+    //   });
+    // });
+
     await Supabase.instance.client
         .from('messages')
         .update({'status': 'read'})
         .eq('code', widget.code)
         .neq('user_id', widget.currentUserId)
-        .eq('status', 'delivered');
+        .eq('status', 'sent');
   }
+  // Future<void> markMessagesAsRead() async {
+  //   await Supabase.instance.client
+  //       .from('messages')
+  //       .update({'status': 'read'})
+  //       .eq('code', widget.code)
+  //       .neq('user_id', widget.currentUserId)
+  //       .eq('status', 'delivered');
+  // }
 
   Future<void> sendMessage({String? text}) async {
     String? uploadedUrl;
@@ -385,26 +425,31 @@ class _ChatScreenState extends State<ChatScreen> {
 
                         return GestureDetector(
                           onTap: () {
-                            final replyKey =
-                                _messageKeys[replyMsg['id'].toString()];
-                            scrollToMessage(replyMsg['id'].toString());
-                            if (replyKey != null &&
-                                replyKey.currentContext != null) {
-                              Scrollable.ensureVisible(
-                                replyKey.currentContext!,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                              setState(() {
-                                highlightedMessageId =
-                                    replyMsg['id'].toString();
-                              });
-                              Future.delayed(const Duration(seconds: 5), () {
+                            try {
+                              final replyKey =
+                                  _messageKeys[replyMsg['id'].toString()];
+                              scrollToMessage(replyMsg['id'].toString());
+                              if (replyKey != null &&
+                                  replyKey.currentContext != null) {
+                                Scrollable.ensureVisible(
+                                  replyKey.currentContext!,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                                  if (mounted) return;
                                 setState(() {
-                                  highlightedMessageId = null;
+                                  highlightedMessageId =
+                                      replyMsg['id'].toString();
                                 });
-                              });
-                            }
+                                Future.delayed(const Duration(seconds: 5), () {
+                                  if (mounted) return;
+                                  
+                                  setState(() {
+                                    highlightedMessageId = null;
+                                  });
+                                });
+                              }
+                            } catch (e) { print('error:$e');}
                           },
                           child: Container(
                             padding: const EdgeInsets.all(6),
@@ -434,49 +479,51 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-void scrollToMessage(String messageId) async {
-  final index = _messageIndexes[messageId];
-  if (index != null) {
+
+  void scrollToMessage(String messageId, {int retryCount = 0}) async {
+    final index = _messageIndexes[messageId];
+    if (index == null) return;
+
+    // أولاً نمرر للرسالة بناءً على تقدير الموقع
     await _scrollController.animateTo(
-      index * 100.0, // بافتراض كل رسالة تقريبًا ارتفاعها 100
+      index * 100.0,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
 
-    await Future.delayed(const Duration(milliseconds: 300)); // استنى تتبني
+    await Future.delayed(const Duration(milliseconds: 300));
+    await WidgetsBinding.instance.endOfFrame;
 
     final key = _messageKeys[messageId];
     if (key != null && key.currentContext != null) {
+      // الرسالة ظهرت، نضمن إنها في منتصف الشاشة
       Scrollable.ensureVisible(
         key.currentContext!,
         duration: const Duration(milliseconds: 300),
         alignment: 0.5,
+        curve: Curves.easeInOut,
       );
+
       setState(() {
         highlightedMessageId = messageId;
       });
+
       Future.delayed(const Duration(seconds: 5), () {
-        setState(() {
-          highlightedMessageId = null;
-        });
+        if (highlightedMessageId == messageId) {
+          setState(() {
+            highlightedMessageId = null;
+          });
+        }
       });
+    } else if (retryCount < 10) {
+      // الرسالة لسه مش مبنية، نحاول تاني بعد تأخير بسيط
+      Future.delayed(const Duration(milliseconds: 200), () {
+        scrollToMessage(messageId, retryCount: retryCount + 1);
+      });
+    } else {
+      print("فشل التمرير للرسالة بعد 10 محاولات.");
     }
   }
-}
-
-  // void scrollToMessage(String messageId) {
-  //   final key = _messageKeys[messageId];
-  //   print('key:$key');
-  //   print('key.currentContext:${key?.currentContext}');
-  //   if (key != null && key.currentContext != null) {
-  //     Scrollable.ensureVisible(
-  //       key.currentContext!,
-  //       duration: Duration(milliseconds: 300),
-  //       curve: Curves.easeInOut,
-  //       alignment: 0.5, // يخلي الرسالة في نص الشاشة تقريبا
-  //     );
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -519,21 +566,24 @@ void scrollToMessage(String messageId) async {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final messages = snapshot.data!;
-                return ListView.builder(
-                  controller: _scrollController,
+                return ScrollablePositionedList.builder(
                   itemCount: messages.length,
+                  itemScrollController: _itemScrollController,
+                  itemPositionsListener: _itemPositionsListener,
                   itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    _messageIndexes[msg['id'].toString()] = index;
-                    return buildMessageTile(msg);
+                    final message = messages[index];
+                    return buildMessageTile(message); // بناء الرسالة حسب تنسيقك
                   },
                 );
 
-                // return ListView.builder(
+                // ListView.builder(
                 //   controller: _scrollController,
                 //   itemCount: messages.length,
-                //   itemBuilder: (context, index) =>
-                //       buildMessageTile(messages[index]),
+                //   itemBuilder: (context, index) {
+                //     final msg = messages[index];
+                //     _messageIndexes[msg['id'].toString()] = index;
+                //     return buildMessageTile(msg);
+                //   },
                 // );
               },
             ),

@@ -1,3 +1,220 @@
+// import 'package:farmplanning/SolutionsFormScreen%20.dart';
+// import 'package:farmplanning/global.dart';
+// import 'package:flutter/material.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:file_picker/file_picker.dart';
+// import 'dart:html' as html;
+
+// class RequestDetailPage extends StatefulWidget {
+//   final int? id;
+//   RequestDetailPage({this.id});
+
+//   @override
+//   _RequestDetailPageState createState() => _RequestDetailPageState();
+// }
+
+// class _RequestDetailPageState extends State<RequestDetailPage> {
+//   List<dynamic> processes = [];
+//   List<dynamic> areas = [];
+//   int? selectedProcessId;
+//   int? creatorid;
+//   TextEditingController noteController = TextEditingController();
+//   TextEditingController refuseController = TextEditingController();
+//   TextEditingController reasonController = TextEditingController();
+//   List<String> existingImageUrls = [];
+//   List<PlatformFile> newPickedImages = [];
+//   bool isLoading = false;
+//   int? selectedfarmId;
+//   String farmText = '';
+//   DateTime createdate=DateTime.now();
+//   String processText = '';
+//   int refuse = 0;
+//   int is_refuse = 0;
+//   int proplems_status = 0;
+//   int problemsId = 0;
+//   @override
+//   void initState() {
+//     super.initState();
+//     fetchProcesses();
+//     fetchAreas();
+//     if (widget.id != null) {
+//       loadData();
+//     }
+//   }
+
+//   Future<void> fetchAreas() async {
+//     final result = await Supabase.instance.client
+//         .from('farm')
+//         .select()
+//         .like('farm_code', '$New_user_area2%')
+//         .eq('level', 5);
+
+//     if (!mounted) return;
+//     if (result.isNotEmpty) {
+//       setState(() {
+//         areas = result;
+//         // areas.addAll(result.map((e) => e).toList());
+//       });
+//     }
+//   }
+
+//   Future<void> fetchProcesses() async {
+//     final response = await Supabase.instance.client
+//         .from('process')
+//         .select('id, process_name')
+//         .eq('isdelete', 0);
+//     if (!mounted) return;
+//     setState(() {
+//       processes = response;
+//     });
+//   }
+
+//   Future<void> loadData() async {
+//     final result = await Supabase.instance.client
+//         .from('proplems_view_sub')
+//         .select()
+//         .eq('id', widget.id!);
+
+//     final data = result;
+//     if (data.isNotEmpty) {
+//       if (!mounted) return;
+//       setState(() {
+//         selectedProcessId = data[0]['process_id'];
+//         farmText = data[0]['shoet_farm_code'];
+//         processText = data[0]['process_name'];
+//         selectedfarmId = data[0]['farm_id'];
+//         creatorid = data[0]['user_id'];
+//         noteController.text = data[0]['note'] ?? '';
+//         reasonController.text = data[0]['reason'] ?? '';
+//         is_refuse = data[0]['is_refuse'] ?? 0;
+//         proplems_status = data[0]['proplems_status'] ?? 0;
+//         refuseController.text = data[0]['refuse_reason'] ?? '';
+//         createdate=data[0]['created_at'] ?? '';
+//         existingImageUrls = data
+//             .map<String>((e) => e['pic_url'] ?? '')
+//             .where((e) => e.isNotEmpty)
+//             .toList();
+//       });
+//     }
+//   }
+
+//   String sanitizeFileName(String fileName) {
+//     return fileName.replaceAll(RegExp(r'[^\w\s\-\.]'), '').replaceAll(' ', '_');
+//   }
+
+//   Future<void> uploadImages() async {
+//     setState(() => isLoading = true);
+//     final result = await FilePicker.platform
+//         .pickFiles(allowMultiple: true, withData: true);
+//     if (result != null) {
+//       newPickedImages.addAll(result.files);
+//     }
+//     setState(() => isLoading = false);
+//   }
+
+//   Future<void> saveRefuse() async {
+//     setState(() => isLoading = true);
+//     await Supabase.instance.client.from('proplems').update({
+//       'is_refuse': 1,
+//       'refuse_reason': refuseController.text,
+//     }).eq('id', widget.id!);
+
+//     setState(() => isLoading = false);
+//   }
+
+//   Future<void> saveRequest() async {
+//     setState(() => isLoading = true);
+
+//     // int proplemId;
+
+//     if (widget.id == null) {
+//       final insertResult = await Supabase.instance.client
+//           .from('proplems')
+//           .insert({
+//             'process_id': selectedProcessId,
+//             'note': noteController.text,
+//             'farm_id': selectedfarmId,
+//             'user_id': user_id,
+//             'reason': reasonController.text,
+//           })
+//           .select()
+//           .single();
+//       problemsId = insertResult['id'];
+//     } else {
+//       await Supabase.instance.client.from('proplems').update({
+//         'process_id': selectedProcessId,
+//         'farm_id': selectedfarmId,
+//         'note': noteController.text,
+//         'reason': reasonController.text,
+//       }).eq('id', widget.id!);
+//       problemsId = widget.id!;
+//     }
+
+//     // حذف الصور التي لم تعد موجودة
+//     final currentImageUrls = [...existingImageUrls];
+//     final dbImages = await Supabase.instance.client
+//         .from('proplems_pic')
+//         .select('pic_url')
+//         .eq('proplems_id', problemsId);
+
+//     for (var image in dbImages) {
+//       if (!currentImageUrls.contains(image['pic_url'])) {
+//         await Supabase.instance.client
+//             .from('proplems_pic')
+//             .delete()
+//             .eq('proplems_id', problemsId)
+//             .eq('pic_url', image['pic_url']);
+//       }
+//     }
+
+//     // رفع الصور الجديدة
+//     for (var file in newPickedImages) {
+//       final bytes = file.bytes;
+//       String cleanName = sanitizeFileName(
+//           '${DateTime.now().millisecondsSinceEpoch}_${file.name}');
+//       await Supabase.instance.client.storage
+//           .from('proplemspic')
+//           .uploadBinary(cleanName, bytes!);
+//       final publicUrl = Supabase.instance.client.storage
+//           .from('proplemspic')
+//           .getPublicUrl(cleanName);
+//       existingImageUrls.add(publicUrl);
+
+//       await Supabase.instance.client.from('proplems_pic').upsert({
+//         'proplems_id': problemsId,
+//         'pic_url': publicUrl,
+//       });
+//     }
+
+//     newPickedImages.clear();
+
+//     setState(() => isLoading = false);
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(content: Text('تم الحفظ بنجاح')),
+//     );
+//     Navigator.pop(context);
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Stack(
+//       children: [
+//         Directionality(
+//           textDirection: TextDirection.rtl,
+//           child: Scaffold(
+//             appBar: AppBar(
+//               title: const Text('عرض الطلب'),
+//               backgroundColor: colorbar,
+//               foregroundColor: Colorapp,
+//             ),
+//             body: SingleChildScrollView(
+//               padding: const EdgeInsets.all(16),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text('رقم الطلبية : $problemsId'),
+//                   Text('تاريخ الانشاء: $createdate'),
 import 'package:farmplanning/SolutionsFormScreen%20.dart';
 import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +243,12 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   bool isLoading = false;
   int? selectedfarmId;
   String farmText = '';
+  DateTime createdate = DateTime.now();
   String processText = '';
   int refuse = 0;
-  int is_refuse = 0;
+  int? is_refuse ;
   int proplems_status = 0;
+  int problemsId = 0;
 
   @override
   void initState() {
@@ -52,7 +271,6 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     if (result.isNotEmpty) {
       setState(() {
         areas = result;
-        // areas.addAll(result.map((e) => e).toList());
       });
     }
   }
@@ -78,6 +296,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     if (data.isNotEmpty) {
       if (!mounted) return;
       setState(() {
+        problemsId= data[0]['id'];
         selectedProcessId = data[0]['process_id'];
         farmText = data[0]['shoet_farm_code'];
         processText = data[0]['process_name'];
@@ -88,6 +307,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         is_refuse = data[0]['is_refuse'] ?? 0;
         proplems_status = data[0]['proplems_status'] ?? 0;
         refuseController.text = data[0]['refuse_reason'] ?? '';
+        createdate = DateTime.parse(data[0]['created_at']).add(Duration(hours: 3));
         existingImageUrls = data
             .map<String>((e) => e['pic_url'] ?? '')
             .where((e) => e.isNotEmpty)
@@ -102,8 +322,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
 
   Future<void> uploadImages() async {
     setState(() => isLoading = true);
-    final result = await FilePicker.platform
-        .pickFiles(allowMultiple: true, withData: true);
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true, withData: true);
     if (result != null) {
       newPickedImages.addAll(result.files);
     }
@@ -116,15 +335,11 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       'is_refuse': 1,
       'refuse_reason': refuseController.text,
     }).eq('id', widget.id!);
-
     setState(() => isLoading = false);
   }
 
   Future<void> saveRequest() async {
     setState(() => isLoading = true);
-
-    int proplemId;
-
     if (widget.id == null) {
       final insertResult = await Supabase.instance.client
           .from('proplems')
@@ -137,7 +352,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
           })
           .select()
           .single();
-      proplemId = insertResult['id'];
+      problemsId = insertResult['id'];
     } else {
       await Supabase.instance.client.from('proplems').update({
         'process_id': selectedProcessId,
@@ -145,27 +360,25 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         'note': noteController.text,
         'reason': reasonController.text,
       }).eq('id', widget.id!);
-      proplemId = widget.id!;
+      problemsId = widget.id!;
     }
 
-    // حذف الصور التي لم تعد موجودة
     final currentImageUrls = [...existingImageUrls];
     final dbImages = await Supabase.instance.client
         .from('proplems_pic')
         .select('pic_url')
-        .eq('proplems_id', proplemId);
+        .eq('proplems_id', problemsId);
 
     for (var image in dbImages) {
       if (!currentImageUrls.contains(image['pic_url'])) {
         await Supabase.instance.client
             .from('proplems_pic')
             .delete()
-            .eq('proplems_id', proplemId)
+            .eq('proplems_id', problemsId)
             .eq('pic_url', image['pic_url']);
       }
     }
 
-    // رفع الصور الجديدة
     for (var file in newPickedImages) {
       final bytes = file.bytes;
       String cleanName = sanitizeFileName(
@@ -179,7 +392,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       existingImageUrls.add(publicUrl);
 
       await Supabase.instance.client.from('proplems_pic').upsert({
-        'proplems_id': proplemId,
+        'proplems_id': problemsId,
         'pic_url': publicUrl,
       });
     }
@@ -211,6 +424,30 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          problemsId > 0
+                              ? 'رقم الطلبية : $problemsId'
+                              : 'طلبية جديدة',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (problemsId > 0)
+                          Text(
+                            'تاريخ الإنشاء: ${createdate.toString().split('.')[0]}',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   DropdownButtonFormField<int>(
                     value: selectedProcessId,
                     items: processes.map((item) {
@@ -333,7 +570,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  if (is_refuse == 0 && proplems_status == 0)
+                  if ((is_refuse == 0 ||is_refuse==null) && proplems_status == 0)
                     Column(
                       children: [
                         if (creatorid == user_id || creatorid == null)
@@ -372,7 +609,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                             ),
                           ),
                         const SizedBox(height: 20),
-                        if (user_respose['can_solution'] == 1)
+                        if (user_respose['can_solution'] == 1&&problemsId>0)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [

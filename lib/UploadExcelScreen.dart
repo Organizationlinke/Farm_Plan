@@ -39,6 +39,7 @@ class _UploadExcelScreenState extends State<UploadExcelScreen> {
 
     final unique =
         {for (var row in response) row['upload_id']: row}.values.toList();
+if (mounted) return;
 
     setState(() {
       uploads = unique;
