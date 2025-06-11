@@ -1,5 +1,3 @@
-
-
 import 'package:farmplanning/downloadExcelTemplate.dart';
 import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
@@ -9,10 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 class UploadExcelScreen extends StatefulWidget {
-    final int type;
+  final int type;
 
   const UploadExcelScreen({
-    Key? key, required this.type,
+    Key? key,
+    required this.type,
   }) : super(key: key);
   @override
   _UploadExcelScreenState createState() => _UploadExcelScreenState();
@@ -34,16 +33,19 @@ class _UploadExcelScreenState extends State<UploadExcelScreen> {
   }
 
   Future<void> fetchUploads() async {
+    final response = await supabase
+        .from('upload_list')
+        .select()
+        .eq('Accept_upload', widget.type)
+        .eq('isdelete', 0);
 
-    final response = await supabase.from('upload_list').select().eq('Accept_upload', widget.type).eq('isdelete',0);
-
-    final unique =
-        {for (var row in response) row['upload_id']: row}.values.toList();
-if (mounted) return;
-
-    setState(() {
-      uploads = unique;
-    });
+    if (response.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          uploads = response;
+        });
+      }
+    }
   }
 
   Future<void> getNextUploadId() async {
@@ -62,7 +64,7 @@ if (mounted) return;
   }
 
   Future<void> deleteUpload(int uploadId) async {
-     await supabase
+    await supabase
         .from('data_table')
         .update({'isdelete': 1}).eq('upload_id', uploadId);
     // await supabase.from('data_table').delete().eq('upload_id', uploadId);
@@ -216,8 +218,6 @@ if (mounted) return;
         await supabase.from('data_table').insert(dataToInsert);
       }
 
-
-
       await fetchUploads();
 
       // ✅ إغلاق البروجرس بار بعد الانتهاء
@@ -234,8 +234,6 @@ if (mounted) return;
       );
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -257,12 +255,12 @@ if (mounted) return;
                 );
               },
             ),
-            if(widget.type==0)
-            IconButton(
-              icon: Icon(Icons.upload_file),
-              tooltip: 'تحميل من Excel',
-              onPressed: uploadFromExcel,
-            ),
+            if (widget.type == 0)
+              IconButton(
+                icon: Icon(Icons.upload_file),
+                tooltip: 'تحميل من Excel',
+                onPressed: uploadFromExcel,
+              ),
           ],
         ),
         body: ListView.builder(
@@ -283,12 +281,12 @@ if (mounted) return;
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if(widget.type==0)
-                      IconButton(
-                        icon: Icon(Icons.check_circle, color: Colors.green),
-                        tooltip: 'قبول',
-                        onPressed: () => _confirmAccept(upload['upload_id']),
-                      ),
+                      if (widget.type == 0)
+                        IconButton(
+                          icon: Icon(Icons.check_circle, color: Colors.green),
+                          tooltip: 'قبول',
+                          onPressed: () => _confirmAccept(upload['upload_id']),
+                        ),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         tooltip: 'حذف',

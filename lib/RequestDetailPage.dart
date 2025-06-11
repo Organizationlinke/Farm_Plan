@@ -339,19 +339,49 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     setState(() => isLoading = false);
   }
 
-  Future<void> saveRefuse() async {
-    setState(() => isLoading = true);
-    await Supabase.instance.client.from('proplems').update({
-      'is_refuse': 1,
-      'refuse_reason': refuseController.text,
-    }).eq('id', widget.id!);
-    setState(() => isLoading = false);
-  }
+  // Future<void> saveRefuse() async {
+  //   setState(() => isLoading = true);
+  //   await Supabase.instance.client.from('proplems').update({
+  //     'is_refuse': 1,
+  //     'refuse_reason': refuseController.text,
+  //     'user_solution':user_id,
+  //     'date_solution':DateTime.now(),
+  //   }).eq('id', widget.id!);
+  //   setState(() => isLoading = false);
+  // }
+Future<void> saveRefuse() async {
+  setState(() => isLoading = true);
+
+  final response = await Supabase.instance.client
+      .from('proplems')
+      .update({
+        'is_refuse': 1,
+        'proplems_status': 2,
+        'refuse_reason': refuseController.text,
+        'user_solution': user_id,
+        'date_solution': DateTime.now().toIso8601String(),
+      })
+      .eq('id', widget.id!)
+      .select();
+await loadData();
+  if (!mounted) return;
+
+  setState(() {
+    isLoading = false;
+  });
+
+  
+}
+
+
 
   Future<void> saveFinished() async {
     setState(() => isLoading = true);
     await Supabase.instance.client.from('proplems').update({
       'is_finished': widget.is_finished,
+      'user_finished': user_id,
+        'date_finished': DateTime.now().toIso8601String(),
+        'proplems_status': 3,
     }).eq('id', widget.id!);
     setState(() => isLoading = false);
   }
@@ -759,7 +789,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                     fontSize: 18)),
                           ],
                         ),
-                      if (proplems_status > 0)
+                      if (proplems_status > 0&&is_refuse == 0)
                         Column(
                           children: [
                             Text('الحالة : تم تقديم حل',
@@ -797,7 +827,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 15),
-                      if (widget.is_finished == 1)
+                      if (proplems_status ==2)
                         TextButton(
                             style: ButtonStyle(
                                 backgroundColor:

@@ -94,18 +94,19 @@ Widget buildRequestList({required String filter, required int is_finish}) {
   if (filter == 'new') {
     filteredRequests = requests
         .where((item) =>
-            item['proplems_status'] == null && item['is_refuse'] == 0)
+            item['proplems_status'] == 0 )//&& item['is_refuse'] == 0
         .toList();
   } else if (filter == 'solved') {
     filteredRequests =
-        requests.where((item) => item['proplems_status'] == 1).toList();
+        requests.where((item) => item['proplems_status'] == 1).toList();//&&item['is_solution_refuse'] == 0
   } else if (filter == 'pending') {
     filteredRequests = requests
         .where((item) =>
-            item['is_finished'] == 0 &&
-            (item['proplems_status'] == 2 ||
-                item['is_solution_refuse'] == 1 ||
-                item['is_refuse'] == 1))
+        item['proplems_status'] ==2)
+            // item['is_finished'] == 0 &&
+            // (item['proplems_status'] == 2 ||
+            //     item['is_solution_refuse'] == 1 ||
+            //     item['is_refuse'] == 1))
         .toList();
   } else {
     filteredRequests = requests;
@@ -126,7 +127,10 @@ Widget buildRequestList({required String filter, required int is_finish}) {
                   is_finished: is_finish,
                 ),
               ),
-            );
+            ).then((_) async{
+                   await fetchRequests();
+                    setState(() {});
+                  });
           },
           leading: CircleAvatar(
             radius: 25,
@@ -151,83 +155,7 @@ Widget buildRequestList({required String filter, required int is_finish}) {
   );
 }
 
-  // Widget buildRequestList({required String filter ,required int is_finish}) {
-  //   List<dynamic> filteredRequests;
-
-  //   if (filter == 'new') {
-  //     filteredRequests = requests
-  //         .where((item) =>
-  //             item['proplems_status'] == null &&
-  //             item['is_refuse'] == 0)
-  //         .toList();
-          
-  //   } else if (filter == 'solved') {
-  //     filteredRequests =
-  //         requests.where((item) => item['proplems_status'] == 1).toList();
-    
-  //   } else if (filter == 'pending') {
-  //     filteredRequests = requests
-  //         .where((item) =>
-  //             item['is_finished'] == 0 &&(item['proplems_status'] == 2||item['is_solution_refuse'] == 1||item['is_refuse'] == 1))
-  //         .toList();
- 
-          
-  //   } else {
-  //     filteredRequests = requests;
-    
-  //   }
-
-  //   return ListView.builder(
-  //     itemCount: filteredRequests.length,
-  //     itemBuilder: (context, index) {
-  //       final item = filteredRequests[index];
-  //       return Card(
-  //         child: ListTile(
-  //           onTap: () {
-  //                 Navigator.push(
-  //                 context,
-  //                 MaterialPageRoute(
-  //                   builder: (_) => RequestDetailPage(id: item['id'],is_finished:is_finished ,),
-  //                 ),
-  //               );
-  //           },
-  //           leading: CircleAvatar(
-  //             radius: 25,
-  //             backgroundColor: Colors.grey[200],
-  //             child: ClipOval(
-  //               child: Image.network(
-  //                 item['photo_url'] ?? '',
-  //                 width: 50,
-  //                 height: 50,
-  //                 fit: BoxFit.cover,
-  //                 errorBuilder: (context, error, stackTrace) =>
-  //                     Icon(Icons.person),
-  //               ),
-  //             ),
-  //           ),
-  //           title: Text(item['shoet_farm_code'] ?? ''),
-  //           subtitle: Text(
-  //               'طلبية رقم :${item['id']} - العملية : ${item['process_name']}'),
-  //           // trailing: ElevatedButton(
-  //           //   style: ElevatedButton.styleFrom(
-  //           //       backgroundColor: const Color.fromARGB(255, 1, 131, 5),
-  //           //       foregroundColor: Colors.white),
-  //           //   onPressed: () {
-  //           //     Navigator.push(
-  //           //       context,
-  //           //       MaterialPageRoute(
-  //           //         builder: (_) => RequestDetailPage(id: item['id']),
-  //           //       ),
-  //           //     );
-  //           //   },
-  //           //   child: Text('عرض'),
-  //           // ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
+  
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -283,7 +211,8 @@ Widget buildRequestList({required String filter, required int is_finish}) {
                     MaterialPageRoute(
                       builder: (_) => RequestDetailPage(),
                     ),
-                  ).then((_) {
+                  ).then((_) async{
+                   await fetchRequests();
                     setState(() {});
                   });
                 },

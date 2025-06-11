@@ -31,7 +31,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
   List<Map<String, dynamic>> itemsList = [];
   int statuse = 0;
   TextEditingController refuseController = TextEditingController();
-  int? is_refuse ;
+  int? is_refuse;
   @override
   void initState() {
     super.initState();
@@ -42,13 +42,32 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
     fetchRefuse();
   }
 
+  // Future<void> saveRefuse() async {
+  //   try {
+  //     await Supabase.instance.client.from('proplems').update({
+  //       'is_solution_refuse': 1,
+  //       'refuse_solution_reason': refuseController.text,
+
+  //     }).eq('id', widget.problemsId);
+  //   } catch (e) {}
+  // }
   Future<void> saveRefuse() async {
-    try {
-      await Supabase.instance.client.from('proplems').update({
-        'is_solution_refuse': 1,
-        'refuse_solution_reason': refuseController.text,
-      }).eq('id', widget.problemsId);
-    } catch (e) {}
+    final response = await Supabase.instance.client
+        .from('proplems')
+        .update({
+          'is_solution_refuse': 1,
+          'proplems_status': 2,
+          'refuse_solution_reason': refuseController.text,
+          'user_accept': user_id,
+          'date_accept': DateTime.now().toIso8601String(),
+        })
+        .eq('id', widget.problemsId)
+        .select();
+    await fetchItems();
+    await fetchRefuse();
+    // if (!mounted) return;
+
+    setState(() {});
   }
 
   Future<void> fetchRefuse() async {
@@ -61,6 +80,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
       final data = response.first;
       refuseController.text = data['refuse_solution_reason'] ?? '';
       is_refuse = 1;
+      
     } else {
       is_refuse = 0;
     }
@@ -125,11 +145,44 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
           .eq('proplems_id', widget.problemsId)
           .select(); // علشان ترجّع البيانات بعد التعديل
       await fetchExistingData();
+      await save_user_accept_info();
       setState(() {});
     } catch (e) {
       print('Error while updating problem status: $e');
     }
   }
+  Future<void> save_user_save_info() async {
+ final response = await Supabase.instance.client
+        .from('proplems')
+        .update({
+          'proplems_status': 1,
+          'user_solution': user_id,
+          'date_solution': DateTime.now().toIso8601String(),
+        })
+        .eq('id', widget.problemsId)
+        .select();
+    await fetchItems();
+    await fetchRefuse();
+    // if (!mounted) return;
+
+    setState(() {});
+}
+Future<void> save_user_accept_info() async {
+ final response = await Supabase.instance.client
+        .from('proplems')
+        .update({
+          'proplems_status': 2,
+          'user_accept': user_id,
+          'date_accept': DateTime.now().toIso8601String(),
+        })
+        .eq('id', widget.problemsId)
+        .select();
+    await fetchItems();
+    await fetchRefuse();
+    // if (!mounted) return;
+
+    setState(() {});
+}
 
   Future<void> saveData() async {
     // تحقق من التكرار في الأصناف الحالية قبل الحفظ
@@ -201,7 +254,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
             .update({'isdelete': 1}).eq('id', idToDelete);
       }
     }
-
+await save_user_save_info();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('تم حفظ التعديلات بنجاح')),
     );
@@ -386,6 +439,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              ///////////////////////////////////////////////////////////// حفظ البيانات
               if (user_respose['can_solution'] == 1 &&
                   statuse < 2 &&
                   is_refuse == 0)
@@ -395,9 +449,11 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                   onPressed: saveData,
                 ),
               // if (is_refuse != 1 ||statuse!=2)
+
+              ///////////////////////////////////////////////////////////// قبول البيانات
               if (user_respose['accept_solution'] == 1 &&
                   statuse < 2 &&
-                   is_refuse == 0)
+                  is_refuse == 0)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -417,8 +473,8 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                     ),
                   ],
                 ),
-
-              if (user_respose['accept_solution'] == 1 && refuse == 1)
+ ///////////////////////////////////////////////////////////// رفض الحل
+              if (user_respose['accept_solution'] == 1 && refuse == 1&&is_refuse==0)
                 Column(
                   children: [
                     const SizedBox(height: 16),

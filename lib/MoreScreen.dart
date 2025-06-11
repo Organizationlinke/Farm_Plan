@@ -1,59 +1,10 @@
 
-// import 'package:farmplanning/ItemsScreen.dart';
-// import 'package:farmplanning/ProcessScreen.dart';
-// import 'package:farmplanning/login.dart';
-// import 'package:flutter/material.dart';
-// class MoreScreen extends StatelessWidget {
-//   const MoreScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("الشاشة الرئيسية")),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             ElevatedButton(
-//               child: const Text("تعريف العمليات"),
-//               onPressed: () {
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(builder: (context) => const ProcessScreen()),
-//                 );
-//               },
-//             ),
-//             ElevatedButton(
-//               child: const Text("تعريف الأصناف"),
-//               onPressed: () {
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(builder: (context) => const ItemsScreen()),
-//                 );
-//               },
-//             ),
-//             ElevatedButton(
-//               child: const Text("تسجيل الخروج"),
-//               onPressed: () {
-//                 Navigator.pushReplacement(
-//                   context,
-//                   MaterialPageRoute(builder: (context) =>  LoginScreen()),
-//                 );
-//               },
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 import 'package:farmplanning/ItemsScreen.dart';
 import 'package:farmplanning/ProcessScreen.dart';
 import 'package:farmplanning/UploadExcelScreen.dart';
 import 'package:farmplanning/global.dart';
 import 'package:farmplanning/login.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
