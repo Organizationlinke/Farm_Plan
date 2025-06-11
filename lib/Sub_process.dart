@@ -427,13 +427,13 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                     ),
                                   ),
                                 ),
-                              if (item['qty_balance'] == 0)
+                              if (item['qty_balance'] == 0&&item['qty']>0)
                                 Text(
                                   'العملية مُرحله',
                                   style: TextStyle(
                                       color: Colors.grey, fontSize: 12),
                                 ),
-                                  if (item['qty_balance'] < item['qty'])
+                                  if (item['qty_balance'] < item['qty']&&item['qty_balance']>0)
                                 Text(
                                   'باقي كمية :${item['qty_balance']}',
                                   style: TextStyle(
