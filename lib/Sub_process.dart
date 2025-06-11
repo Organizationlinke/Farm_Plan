@@ -74,8 +74,10 @@ class _DataTableScreenState extends State<DataTableScreen> {
 
         _cancelReasons[item['id']] =
             TextEditingController(text: item['cancel_reason'] ?? '');
-        _processcontroller[item['id']] =
-            TextEditingController(text: item['actual_qty'].toString()=='null'?'':item['actual_qty'].toString() );
+        _processcontroller[item['id']] = TextEditingController(
+            text: item['actual_qty'].toString() == 'null'
+                ? ''
+                : item['actual_qty'].toString());
       }
     });
   }
@@ -126,7 +128,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
         return;
       }
       if (item['process_id'] == 5 &&
-          _processcontroller[item['id']]!.text.isEmpty &&_itemStatuses[item['id']] == 'finished') {
+          _processcontroller[item['id']]!.text.isEmpty &&
+          _itemStatuses[item['id']] == 'finished') {
         _showAlertDialog('خطأ', 'يجب إدخال عدد ساعات الري الفعليه.');
         return;
       }
@@ -167,9 +170,10 @@ class _DataTableScreenState extends State<DataTableScreen> {
               stats_user: user_id,
               'cancel_reason':
                   status == 'cancel' ? _cancelReasons[item['id']]!.text : null,
-              'actual_qty': item['process_id'] == 5 &&_itemStatuses[item['id']] == 'finished'
+              'actual_qty': item['process_id'] == 5 &&
+                      _itemStatuses[item['id']] == 'finished'
                   ? _processcontroller[item['id']]!.text
-                  : 0,
+                  : item['qty_balance'],
               'out_source': item['out_source'] ?? false, // ✅ أضف هذا السطر
               // 'is_saved': 1 // 🔥 بعد الحفظ يتم تحديث is_saved إلى 1
             })
@@ -201,90 +205,123 @@ class _DataTableScreenState extends State<DataTableScreen> {
       ),
     );
   }
+  Future<bool?> _showDatePickerAndTransfer(Map<String, dynamic> item,
+    {required bool fullTransfer}) async {
+  DateTime selectedDate = DateTime.now();
+  TextEditingController qtyController = TextEditingController();
 
-  void _showDatePickerAndTransfer(Map<String, dynamic> item,
-      {required bool fullTransfer}) {
-    DateTime selectedDate = DateTime.now();
-    TextEditingController qtyController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(
-            fullTransfer ? 'ترحيل العملية' : 'ترحيل جزء من العملية',
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('التاريخ', textAlign: TextAlign.center),
-              ElevatedButton(
-                onPressed: () async {
-                  DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (picked != null && picked != selectedDate) {
-                    setState(() {
-                      selectedDate = picked;
-                    });
-                  }
-                },
-                child: Text(
-                  '${selectedDate.toLocal()}'.split(' ')[0],
+  return await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: Text(
+          fullTransfer ? 'ترحيل العملية' : 'ترحيل جزء من العملية',
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: 500,),
+            Text('التاريخ', textAlign: TextAlign.center),
+            SizedBox(height: 15,),
+            ElevatedButton(
+              onPressed: () async {
+                DateTime? picked = await showDatePicker(
+                  context: dialogContext, // استخدم سياق الـ dialog
+                  initialDate: selectedDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  setState(() {
+                    selectedDate = picked;
+                  });
+                }
+              },
+              child: Text(
+                '${selectedDate.toLocal()}'.split(' ')[0],
+              ),
+            ),
+             if (!fullTransfer)
+             SizedBox(height: 15,),
+            if (!fullTransfer)
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
                   textAlign: TextAlign.center,
+                  controller: qtyController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText:
+                        'أدخل الكمية المتبقية (متاح كمية ${item['qty_balance']} ${item['unit']} فقط)',
+                  ),
+
                 ),
               ),
-              if (!fullTransfer)
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: TextField(
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                    controller: qtyController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'أدخل الكمية المتبقية',
-                      alignLabelWithHint: true,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('إلغاء', textAlign: TextAlign.right),
-                ),
-                TextButton(
-                  onPressed: () {
-                    _saveTransferData(
-                      item,
-                      selectedDate,
-                      fullTransfer
-                          ? item['qty']
-                          : double.tryParse(qtyController.text) ?? 0.0,
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: Text('موافق', textAlign: TextAlign.left),
-                ),
-              ],
-            ),
+               SizedBox(height: 15,),
           ],
         ),
-      ),
-    );
-  }
+        
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  double enteredQty =
+                      double.tryParse(qtyController.text) ?? 0.0;
+                  double qtyBalance = item['qty_balance'] ?? 0.0;
 
-  Future<void> _saveTransferData(
-      Map<String, dynamic> item, DateTime date, double qty) async {
+                  if (!fullTransfer && enteredQty > qtyBalance) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'الكمية المدخلة لا يجب أن تتجاوز الرصيد المتبقي (${qtyBalance.toStringAsFixed(2)}).'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    print('بدأ الحفظ...');
+                     _saveTransferData(
+                      item,
+                      selectedDate,
+                      fullTransfer ? item['qty'] : enteredQty,
+                      fullTransfer ? 'Full' : 'Part',
+                    );
+                    print('تم الحفظ');
+
+                    // أغلق الديالوج بشكل آمن بعد الانتظار
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop(true);
+                      print('تم إغلاق الديالوج');
+                    }
+                  } catch (e) {
+                    print("خطأ أثناء الحفظ: $e");
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(content: Text('حدث خطأ أثناء الحفظ')),
+                    );
+                  }
+                },
+                child: Text('موافق'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+  Future<void> _saveTransferData(Map<String, dynamic> item, DateTime date,
+      double qty, String post_type) async {
     await supabase.from('data_table').upsert({
       'date_from': date.toIso8601String(),
       'date_to': date.toIso8601String(),
@@ -293,7 +330,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
       'qty': qty,
       'farm_id': item['farm_id'],
       'old_id': item['id'],
-      'user_post': user_id
+      'user_post': user_id,
+      'post_type': post_type
     });
     _showAlertDialog('نجاح', 'تم الترحيل بنجاح');
   }
@@ -351,7 +389,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
                               SizedBox(
                                 width: 15,
                               ),
-                              if (item['is_out_source'] == 1)
+                              if (item['is_out_source'] == 1 &&
+                                  item['qty_balance'] > 0)
                                 Row(
                                   children: [
                                     Text(
@@ -360,16 +399,18 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                     ),
                                     Checkbox(
                                       value: item['out_source'] ?? false,
-                                      onChanged: (val) {
+                                      onChanged:_itemStatuses[item['id']] == 'finished'?null: (val) {
                                         setState(() {
                                           item['out_source'] = val!;
-                                          print('out_source${item['out_source']}');
+                                        
                                         });
                                       },
                                     ),
                                   ],
                                 ),
-                              if (item['process_id'] == 5&&_itemStatuses[item['id']] == 'finished')
+                              if (item['process_id'] == 5 &&
+                                  _itemStatuses[item['id']] == 'finished' &&
+                                  item['qty_balance'] > 0)
                                 SizedBox(
                                   width: 150,
                                   child: TextField(
@@ -386,6 +427,18 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                     ),
                                   ),
                                 ),
+                              if (item['qty_balance'] == 0)
+                                Text(
+                                  'العملية مُرحله',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                ),
+                                  if (item['qty_balance'] < item['qty'])
+                                Text(
+                                  'باقي كمية :${item['qty_balance']}',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                ),
                             ],
                           ),
                           Row(
@@ -398,22 +451,41 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                   Icons.more_vert,
                                   color: MainFoantcolor,
                                 ),
-                                onSelected: (value) {
+                                onSelected: (value) async {
+                                  bool? result;
+
                                   if (value == 'full_transfer') {
-                                    _showDatePickerAndTransfer(item,
+                                    result = await _showDatePickerAndTransfer(
+                                        item,
                                         fullTransfer: true);
                                   } else if (value == 'partial_transfer') {
-                                    _showDatePickerAndTransfer(item,
+                                    result = await _showDatePickerAndTransfer(
+                                        item,
                                         fullTransfer: false);
+                                        print('result::$result');
+                                  }
+
+                                  if (result == true) {
+                                    await _fetchItems();
+                                     
+                                    setState(() {});
                                   }
                                 },
+
+                                //&&_itemStatuses[item['id']]!='cancel'&&_itemStatuses[item['id']]!='finished'
                                 itemBuilder: (context) => [
-                                  if (user_respose['can_post'] == 1)
+                                  if (user_respose['can_post'] == 1 &&
+                                      _itemStatuses[item['id']] == null &&
+                                      item['qty_balance'] == item['qty'])
                                     PopupMenuItem(
                                       value: 'full_transfer',
                                       child: Text('ترحيل العملية'),
                                     ),
-                                  if (user_respose['can_post'] == 1)
+                                  if (user_respose['can_post'] == 1 &&
+                                      item['qty_balance'] > 0 &&
+                                      (_itemStatuses[item['id']] == null ||
+                                          _itemStatuses[item['id']] ==
+                                              'under_progress'))
                                     PopupMenuItem(
                                       value: 'partial_transfer',
                                       child: Text('ترحيل جزء من العملية'),
@@ -439,7 +511,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                     value: 'under_progress',
                                     activeColor: color_under,
                                     groupValue: _itemStatuses[item['id']],
-                                    onChanged: user_type != 2
+                                    onChanged: user_type != 2 ||
+                                            item['qty_balance'] == 0
                                         ? null
                                         : underProgressNotNull
                                             ? null
@@ -459,7 +532,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                     value: 'finished',
                                     activeColor: color_finish,
                                     groupValue: _itemStatuses[item['id']],
-                                    onChanged: user_type != 2
+                                    onChanged: user_type != 2 ||
+                                            item['qty_balance'] == 0
                                         ? null
                                         : cancel_notnull
                                             ? null
@@ -479,7 +553,8 @@ class _DataTableScreenState extends State<DataTableScreen> {
                                     value: 'cancel',
                                     activeColor: color_cancel,
                                     groupValue: _itemStatuses[item['id']],
-                                    onChanged: user_type != 2
+                                    onChanged: user_type != 2 ||
+                                            item['qty_balance'] == 0
                                         ? null
                                         : underProgressNotNull
                                             ? null

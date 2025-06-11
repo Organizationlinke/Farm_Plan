@@ -218,13 +218,16 @@
 import 'package:farmplanning/SolutionsFormScreen%20.dart';
 import 'package:farmplanning/global.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:html' as html;
+import 'package:intl/intl.dart' show DateFormat;
 
 class RequestDetailPage extends StatefulWidget {
   final int? id;
-  RequestDetailPage({this.id});
+  final int? is_finished;
+  RequestDetailPage({this.id, this.is_finished});
 
   @override
   _RequestDetailPageState createState() => _RequestDetailPageState();
@@ -246,7 +249,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   DateTime createdate = DateTime.now();
   String processText = '';
   int refuse = 0;
-  int? is_refuse ;
+  int? is_refuse;
   int proplems_status = 0;
   int problemsId = 0;
 
@@ -255,6 +258,11 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     super.initState();
     fetchProcesses();
     fetchAreas();
+    initializeDateFormatting('ar', null).then((_) {
+      setState(() {
+        // بعد التهيئة يمكنك استخدام DateFormat
+      });
+    });
     if (widget.id != null) {
       loadData();
     }
@@ -296,7 +304,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     if (data.isNotEmpty) {
       if (!mounted) return;
       setState(() {
-        problemsId= data[0]['id'];
+        problemsId = data[0]['id'];
         selectedProcessId = data[0]['process_id'];
         farmText = data[0]['shoet_farm_code'];
         processText = data[0]['process_name'];
@@ -307,7 +315,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         is_refuse = data[0]['is_refuse'] ?? 0;
         proplems_status = data[0]['proplems_status'] ?? 0;
         refuseController.text = data[0]['refuse_reason'] ?? '';
-        createdate = DateTime.parse(data[0]['created_at']).add(Duration(hours: 3));
+        createdate =
+            DateTime.parse(data[0]['created_at']).add(Duration(hours: 3));
         existingImageUrls = data
             .map<String>((e) => e['pic_url'] ?? '')
             .where((e) => e.isNotEmpty)
@@ -322,7 +331,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
 
   Future<void> uploadImages() async {
     setState(() => isLoading = true);
-    final result = await FilePicker.platform.pickFiles(allowMultiple: true, withData: true);
+    final result = await FilePicker.platform
+        .pickFiles(allowMultiple: true, withData: true);
     if (result != null) {
       newPickedImages.addAll(result.files);
     }
@@ -334,6 +344,14 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     await Supabase.instance.client.from('proplems').update({
       'is_refuse': 1,
       'refuse_reason': refuseController.text,
+    }).eq('id', widget.id!);
+    setState(() => isLoading = false);
+  }
+
+  Future<void> saveFinished() async {
+    setState(() => isLoading = true);
+    await Supabase.instance.client.from('proplems').update({
+      'is_finished': widget.is_finished,
     }).eq('id', widget.id!);
     setState(() => isLoading = false);
   }
@@ -439,7 +457,9 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         const SizedBox(height: 8),
                         if (problemsId > 0)
                           Text(
-                            'تاريخ الإنشاء: ${createdate.toString().split('.')[0]}',
+                            'تاريخ الإنشاء: ${DateFormat('yyyy/MM/dd hh:mm a', 'ar').format(createdate)}',
+
+                            // 'تاريخ الإنشاء: ${createdate.toString().split('.')[0]}',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 14,
@@ -570,7 +590,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  if ((is_refuse == 0 ||is_refuse==null) && proplems_status == 0)
+                  if ((is_refuse == 0 || is_refuse == null) &&
+                      proplems_status == 0)
                     Column(
                       children: [
                         if (creatorid == user_id || creatorid == null)
@@ -609,7 +630,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                             ),
                           ),
                         const SizedBox(height: 20),
-                        if (user_respose['can_solution'] == 1&&problemsId>0)
+                        if (user_respose['can_solution'] == 1 && problemsId > 0)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -775,6 +796,46 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                 ))
                           ],
                         ),
+                        const SizedBox(height: 15),
+                      if (widget.is_finished == 1)
+                        TextButton(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all(Colors.blue)),
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('تأكيد'),
+                                  content: Text(
+                                      'هل أنت متأكد أن المشكلة تم حلها بالكامل؟'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: Text('لا'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: Text('نعم'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true) {
+                                await saveFinished();
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('هل تم حل المشكله ؟',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 15)),
+                            ))
                     ],
                   )
                 ],

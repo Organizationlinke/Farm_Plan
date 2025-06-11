@@ -78,7 +78,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
 
   Future<void> fetchExistingData() async {
     final response = await Supabase.instance.client
-        .from('data_table_full_view2')
+        .from('data_table_full_view')
         .select()
         .eq('proplems_id', widget.problemsId);
 
@@ -407,7 +407,7 @@ class _ProblemFormScreenState extends State<SolutionsFormScreen> {
                       onPressed: AcceptSolution,
                     ),
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.save),
+                      icon: const Icon(Icons.cancel),
                       label: const Text('رفض الحل'),
                       onPressed: () {
                         setState(() {
