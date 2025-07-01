@@ -54,10 +54,13 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   }
 
   Future<List<Map<String, dynamic>>> fetchGroupedProcesses() async {
+    final int userIdInt = int.parse(user_id.toString());
+
     final response = await supabase.rpc('fetch_process_data', params: {
       'farm_code_param': '$New_user_area%',
       'date_from_param': selectedDate.toIso8601String(),
       'date_to_param': selectedDate.toIso8601String(),
+      'user_id_param':userIdInt
     });
 
     // التحقق مما إذا كان `response` يحتوي على خطأ
@@ -96,10 +99,11 @@ class _MainProcessScreenState extends State<MainProcessScreen> {
   Future<void> fetchAreas() async {
     areas.clear();
     final result = await supabase
-        .from('farm')
+        .from('farm_users')
         .select()
         .like('farm_code', '$New_user_area%')
-        .eq('level', new_level);
+        .eq('level', new_level)
+        .eq('user_id', user_id);
 
     if (result.isNotEmpty) {
       areas.clear();

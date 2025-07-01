@@ -29,10 +29,13 @@ class _RequestListPageState extends State<RequestListPage2> {
   Future<void> fetchAreas() async {
     areas.clear();
     final result = await Supabase.instance.client
-        .from('farm')
+        .from('farm_users')
         .select()
         .like('farm_code', '$New_user_area2%')
-        .eq('level', new_level2);
+        .eq('level', new_level2)
+         .eq('user_id', user_id);
+         
+       
 
     if (result.isNotEmpty) {
       setState(() {
@@ -82,6 +85,7 @@ class _RequestListPageState extends State<RequestListPage2> {
     final response = await Supabase.instance.client
         .from('proplems_view')
         .select()
+        .eq('user_id_area', user_id)
         .like('farm_code', '$New_user_area2%');
     if (!mounted) return;
     setState(() {

@@ -27,7 +27,87 @@ class _LoginScreenState extends State<LoginScreen> {
     _userController.text = prefs.getString('user_enter') ?? '';
     _passController.text = prefs.getString('pass') ?? '';
   }
+// login_screen.dart -> _login()
 
+// login_screen.dart -> _login()
+// login_screen.dart -> _login()
+
+// Future<void> _login() async {
+//   final userEnter = _userController.text;
+//   final pass = _passController.text;
+
+//   // 1. جلب بيانات المستخدم الأساسية
+//   final userResponse = await Supabase.instance.client
+//       .from('users')
+//       .select()
+//       .eq('user_enter', userEnter)
+//       .eq('pass', pass)
+//       .single();
+
+//   if (userResponse.isEmpty) {
+//     if (mounted) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text('اسم المستخدم أو كلمة السر غير صحيحة')),
+//       );
+//     }
+//     return;
+//   }
+
+//   // حفظ بيانات المستخدم
+//   user_id = userResponse["id"];
+//   user_respose = userResponse;
+//   // ... (حفظ باقي بيانات المستخدم)
+
+//   // 2. جلب كل farm_id المسؤول عنها المستخدم
+//   final responsibilitiesResponse = await Supabase.instance.client
+//       .from('usertable')
+//       .select('farm_id')
+//       .eq('id', user_id);
+      
+//   final List<dynamic> farmIds = responsibilitiesResponse
+//       .map((item) => item['farm_id'])
+//       .toList();
+
+//   if (farmIds.isEmpty) {
+//       print("هذا المستخدم ليس لديه أي مناطق مسؤولية.");
+//       return;
+//   }
+
+//   // --- التعديل النهائي هنا ---
+
+//   // 3. تحويل قائمة الأرقام إلى نص بالصيغة المطلوبة
+//   final String idListString = '(${farmIds.join(',')})';
+
+//   // 4. استخدام دالة filter لجلب البيانات
+//   final farmCodesResponse = await Supabase.instance.client
+//       .from('farm')
+//       .select('farm_code')
+//       .filter('id', 'in', idListString); // ✅ الطريقة المضمونة
+
+//   // --- نهاية التعديل ---
+
+//   // تخزين قائمة الأكواد في المتغير العام
+//   user_responsible_areas = farmCodesResponse
+//       .map<String>((item) => item['farm_code'] as String)
+//       .toList();
+
+//   if (user_responsible_areas.isNotEmpty) {
+//     New_user_area = user_responsible_areas[0];
+//     New_user_area2 = user_responsible_areas[0];
+//   }
+  
+//   // ... (باقي كود تسجيل الدخول)
+//   final prefs = await SharedPreferences.getInstance();
+//   await prefs.setString('user_enter', userEnter);
+//   await prefs.setString('pass', pass);
+
+//   if (mounted) {
+//     Navigator.pushReplacement(
+//       context,
+//       MaterialPageRoute(builder: (context) => MainScreen()),
+//     );
+//   }
+// }
   Future<void> _login() async {
     final userEnter = _userController.text;
     final pass = _passController.text;

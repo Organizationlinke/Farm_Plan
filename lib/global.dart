@@ -18,6 +18,7 @@ var old_check_farm;
 var old_check_farm2;
 int user_type=1;
 var user_respose;
+List<String> user_responsible_areas = [];
 
 // const Colorapp =Color.fromARGB(255, 120, 60, 255);
 const Colorapp=Colors.white;
