@@ -30,13 +30,21 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    MainProcessScreen(),
-   user_respose['Isadmain']==1? UploadExcelScreen(type: 0,):OrdersScreen(),
-     RequestListPage2(),
+    MainProcessScreen(mainkey:1),
+    user_respose['Isadmain'] == 1
+        ? UploadExcelScreen(
+            type: 0,
+          )
+        : OrdersScreen(),
+    RequestListPage2(),
     //  ChatScreen(),
-    MessageUsersListPage(currentUserId: user_id,currentUserUUID: user_uuid,),
-    UserProfileScreen(),
-     MoreScreen(),
+    MessageUsersListPage(
+      currentUserId: user_id,
+      currentUserUUID: user_uuid,
+    ),
+    MainProcessScreen(mainkey:2),
+    // UserProfileScreen(),
+    MoreScreen(),
   ];
 
   @override
@@ -54,15 +62,18 @@ class _MainScreenState extends State<MainScreen> {
             });
           },
           type: BottomNavigationBarType.fixed,
-          selectedItemColor:colorbar,
+          selectedItemColor: colorbar,
           unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
           items: [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "رئيسية"),
-            BottomNavigationBarItem(icon: Icon(Icons.upload_file), label: "تحميل بيانات"),
-             BottomNavigationBarItem(icon: Icon(Icons.list), label: "طلبات"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.upload_file), label: "تحميل بيانات"),
+            BottomNavigationBarItem(icon: Icon(Icons.list), label: "طلبات"),
             BottomNavigationBarItem(icon: Icon(Icons.chat), label: "مراسلة"),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: "المستخدم"),
-            BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: "مزيد"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.person), label: "تقرير اجمالي"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.more_horiz), label: "مزيد"),
           ],
         ),
       ),
@@ -70,12 +81,11 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-
-
 class OrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text("📦 تحميل من اكسل", style: TextStyle(fontSize: 24)));
+    return Center(
+        child: Text("📦 تحميل من اكسل", style: TextStyle(fontSize: 24)));
   }
 }
 

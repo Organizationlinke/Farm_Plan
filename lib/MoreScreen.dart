@@ -1,9 +1,11 @@
 
 import 'package:farmplanning/ItemsScreen.dart';
 import 'package:farmplanning/ProcessScreen.dart';
+import 'package:farmplanning/ReportData.dart';
 import 'package:farmplanning/UploadExcelScreen.dart';
 import 'package:farmplanning/global.dart';
 import 'package:farmplanning/login.dart';
+import 'package:farmplanning/users.dart';
 import 'package:flutter/material.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -50,6 +52,30 @@ class MoreScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) =>  UploadExcelScreen(type:1)),
+              );
+            },
+          ),
+               const Divider(),
+          ListTile(
+            leading:  const Icon(Icons.upload,color: Colors.green),
+            title: const Text("جدول البيانات"),
+            onTap: () {
+             if(user_respose['Isadmain']==1)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  ReportTableScreen()),
+              );
+            },
+          ),
+                  const Divider(),
+          ListTile(
+            leading:  const Icon(Icons.person,color: Colors.blue),
+            title: const Text("المستخدم"),
+            onTap: () {
+          
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  UserProfileScreen()),
               );
             },
           ),

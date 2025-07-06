@@ -6,13 +6,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DataTableScreen extends StatefulWidget {
   final String processName;
-  final DateTime selectedDate;
+  final DateTime selectedDate_from;
+   final DateTime selectedDate_to;
   final bool checkdate;
 
   const DataTableScreen({
     Key? key,
     required this.processName,
-    required this.selectedDate,
+    required this.selectedDate_from,
+    required this.selectedDate_to,
     required this.checkdate,
   }) : super(key: key);
 
@@ -105,8 +107,9 @@ class _DataTableScreenState extends State<DataTableScreen> {
         .like('farm_code', '$New_user_area%')
         .eq('process_name', widget.processName)
         .eq('user_id', user_id)
-        .gte('date_to', widget.selectedDate.toIso8601String())
-        .lte('date_from', widget.selectedDate.toIso8601String());
+        // .gte('date_to', widget.selectedDate_to.toIso8601String())
+        .gte('date_from', widget.selectedDate_from.toIso8601String())
+        .lte('date_to', widget.selectedDate_to.toIso8601String());
     setState(() {
       _items = response as List<Map<String, dynamic>>;
       for (var item in _items) {
@@ -631,7 +634,7 @@ class _DataTableScreenState extends State<DataTableScreen> {
                 backgroundColor: colorbar,
                 foregroundColor: Colorapp,
                 title: Text(
-                    '${widget.processName} - ${widget.selectedDate.toLocal().toString().split(' ')[0]}'),
+                    '${widget.processName} - من:  ${widget.selectedDate_from.toLocal().toString().split(' ')[0]} الي : ${widget.selectedDate_to.toLocal().toString().split(' ')[0]}'),
                 actions: [
                   DropdownButton<String>(
                     value: selectedFilter,
