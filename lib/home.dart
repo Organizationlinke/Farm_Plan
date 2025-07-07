@@ -71,7 +71,7 @@ class _MainScreenState extends State<MainScreen> {
             BottomNavigationBarItem(icon: Icon(Icons.list), label: "طلبات"),
             BottomNavigationBarItem(icon: Icon(Icons.chat), label: "مراسلة"),
             BottomNavigationBarItem(
-                icon: Icon(Icons.person), label: "تقرير اجمالي"),
+                icon: Icon(Icons.report), label: "تقرير اجمالي"),
             BottomNavigationBarItem(
                 icon: Icon(Icons.more_horiz), label: "مزيد"),
           ],
